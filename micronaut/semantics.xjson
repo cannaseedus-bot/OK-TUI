@@ -1,0 +1,40 @@
+{
+  "schema": "KUHUL-TSG/1",
+  "object": "micronaut",
+  "status": "frozen",
+  "intent": "file-centric semantic projection",
+  "records": {
+    "chat": {
+      "path": "io/chat.txt",
+      "format": "append-only",
+      "grammar": [
+        "--- MESSAGE ---",
+        "id: <uuid>",
+        "time: <unix_ms>",
+        "role: user | system | micronaut",
+        "intent: chat | generate | classify | complete",
+        "context: <optional>",
+        "payload:",
+        "<UTF-8 text>",
+        "--- END ---"
+      ],
+      "rules": [
+        "immutable",
+        "order-is-truth",
+        "atomic-append-only",
+        "cm-1-verify"
+      ]
+    },
+    "stream": {
+      "path": "io/stream.txt",
+      "format": "append-only",
+      "record": ">> t=<tick> ctx=<context> mass=<float>\n<payload>",
+      "rules": [
+        "ordered",
+        "replayable",
+        "truncate-safe",
+        "projection-only"
+      ]
+    }
+  }
+}
