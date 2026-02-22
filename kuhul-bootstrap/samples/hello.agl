@@ -1,0 +1,9 @@
+@flux.init(rate=60)
+
+@flux.phase(enter="compute")
+
+⟁glyph.hash(target="hello_world")
+
+@flux.phase(enter="render")
+
+⟁glyph.render(target="screen")

@@ -1,0 +1,7 @@
+@flux.init(rate=120)
+
+@flux.phase(enter="compute")
+
+⟁glyph.hash(target="gpu_tensor")
+
+@flux.phase(enter="render")
