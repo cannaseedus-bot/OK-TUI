@@ -1,0 +1,1 @@
+stage=2 input=kuhulc/main.khl output=build/kuhulc_stage2 hash=deterministic

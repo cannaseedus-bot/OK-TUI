@@ -1,0 +1,29 @@
+name: bootstrap
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build bootstrap
+        run: cargo build --release --manifest-path kuhul-bootstrap/bootstrap/Cargo.toml
+
+      - name: Build stage1
+        run: |
+          mkdir -p kuhul-bootstrap/build
+          kuhul-bootstrap/bootstrap/target/release/kuhulc_stage0 \
+            kuhul-bootstrap/kuhulc/main.khl \
+            -o kuhul-bootstrap/build/kuhulc_stage1
+
+      - name: Build stage2
+        run: |
+          kuhul-bootstrap/build/kuhulc_stage1 \
+            kuhul-bootstrap/kuhulc/main.khl \
+            -o kuhul-bootstrap/build/kuhulc_stage2
+
+      - name: Verify deterministic bootstrap
+        run: cmp kuhul-bootstrap/build/kuhulc_stage1 kuhul-bootstrap/build/kuhulc_stage2

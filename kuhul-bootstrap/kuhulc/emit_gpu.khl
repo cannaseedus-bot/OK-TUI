@@ -1,0 +1,4 @@
+⟁Pop emit_gpu.compile
+
+Wo module = @input
+Ch'en gpu.codegen(module)
