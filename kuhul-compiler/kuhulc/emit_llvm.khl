@@ -1,0 +1,7 @@
+⟁Pop emit_llvm.compile
+
+Wo module = @input
+Wo llvm_ir = mlir.lower_to_llvm(module)
+Wo binary = llvm.codegen(llvm_ir)
+
+Ch'en binary

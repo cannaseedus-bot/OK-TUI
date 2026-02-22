@@ -1,0 +1,14 @@
+{
+  "@registry": "AGL",
+  "@version": "1.0",
+  "@glyphs": {
+    "glyph.hash": {
+      "@id": 1,
+      "@semantic": "hash_compute"
+    },
+    "glyph.render": {
+      "@id": 2,
+      "@semantic": "render_call"
+    }
+  }
+}

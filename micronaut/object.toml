@@ -1,0 +1,22 @@
+schema = "SCO/1"
+object = "micronaut"
+version = "1.0"
+state_machine = "INIT → READY → RUNNING → IDLE → HALT"
+root = "./"
+sealed = true
+
+[io]
+chat = "io/chat.txt"
+stream = "io/stream.txt"
+snapshot = "io/snapshot/"
+
+[brains]
+trigrams = "brains/trigrams.json"
+bigrams = "brains/bigrams.json"
+intent_map = "brains/meta-intent-map.json"
+
+[trace]
+scxq2 = "trace/scxq2.trace"
+
+[proof]
+scxq2 = "proof/scxq2.proof"

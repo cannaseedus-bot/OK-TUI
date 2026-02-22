@@ -1,0 +1,10 @@
+⟁Pop parser.parse
+
+Wo tokens = @input
+
+Wo ast = {
+  type: "Module",
+  body: tokens
+}
+
+Ch'en ast
