@@ -23,6 +23,17 @@ Optional flags:
 - `--no-ans`
 - `--revision <tag_or_commit>`
 - `--local-files-only`
+- `--profile build_phi3_igpu_profile.json`
+
+
+Intel iGPU tuned profile example:
+
+```bash
+python hf_to_scxq2_cluster.py \
+  microsoft/Phi-3-mini-4k-instruct \
+  phi3-iGPU \
+  --profile build_phi3_igpu_profile.json
+```
 
 ## Output
 

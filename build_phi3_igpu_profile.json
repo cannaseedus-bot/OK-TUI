@@ -1,0 +1,19 @@
+{
+  "model": "microsoft/Phi-3-mini-4k-instruct",
+  "quantization": "INT4",
+  "target": "intel_igpu",
+  "max_shard_size_mb": 64,
+  "gpu_buffer_limit_mb": 128,
+  "kv_cache": {
+    "dtype": "INT4",
+    "compression": "delta"
+  },
+  "layout": {
+    "embed": "separate",
+    "layers": "per-layer shards",
+    "output": "separate"
+  },
+  "entropy": {
+    "ans": true
+  }
+}

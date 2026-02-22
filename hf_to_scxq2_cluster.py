@@ -18,7 +18,7 @@ import re
 import struct
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import torch
 from huggingface_hub import snapshot_download
@@ -175,6 +175,7 @@ def convert_cluster(
     local_files_only: bool,
     max_shard_size_mb: int,
     use_ans: bool,
+    profile: dict[str, Any] | None = None,
 ) -> None:
     state, config = _load_hf_state_dict(repo=repo, revision=revision, local_files_only=local_files_only)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -224,8 +225,20 @@ def convert_cluster(
         "device_used": str(device),
         "shards": shard_index,
     }
+    if profile:
+        index["profile"] = profile
     (output_dir / "model.scxq2.index").write_text(json.dumps(index, indent=2), encoding="utf-8")
     _write_metadata(output_dir, config, shard_files)
+
+
+def _load_profile(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("profile JSON must be an object")
+    return raw
 
 
 def _parse_args() -> argparse.Namespace:
@@ -236,18 +249,27 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--local-files-only", action="store_true")
     p.add_argument("--max-shard-size-mb", type=int, default=256)
     p.add_argument("--no-ans", action="store_true", help="Disable ANS entropy compression")
+    p.add_argument("--profile", type=Path, default=None, help="Optional profile JSON for target-specific settings")
     return p.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
+    profile = _load_profile(args.profile)
+
+    max_shard_size_mb = int(profile.get("max_shard_size_mb", args.max_shard_size_mb)) if profile else args.max_shard_size_mb
+    ans_enabled = not args.no_ans
+    if profile:
+        ans_enabled = bool(profile.get("entropy", {}).get("ans", ans_enabled))
+
     convert_cluster(
         repo=args.repo,
         output_dir=args.output,
         revision=args.revision,
         local_files_only=args.local_files_only,
-        max_shard_size_mb=args.max_shard_size_mb,
-        use_ans=not args.no_ans,
+        max_shard_size_mb=max_shard_size_mb,
+        use_ans=ans_enabled,
+        profile=profile or None,
     )
 
 
