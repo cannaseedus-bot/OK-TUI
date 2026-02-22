@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCXQ2Tensor",
+  "type": "object",
+  "required": ["name", "shape", "quantization", "scale", "payload_bytes"],
+  "properties": {
+    "name": {"type": "string"},
+    "shape": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 0}
+    },
+    "quantization": {"enum": ["int4", "int8", "fp16"]},
+    "scale": {"type": "number"},
+    "payload_bytes": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": false
+}
