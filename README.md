@@ -61,6 +61,11 @@ If you need `if`, `for`, `when`, `async`, `emit`, `handle`, or `subscribe`, it d
 
 Only one layer is frozen forever: **π**. Everything else is a host, projection, or shadow.
 
+
+## 🧱 Compiler Roadmap
+
+- Self-hosting compiler architecture and bootstrap plan: `docs/kuhul-self-hosting-architecture.md`
+
 ## 🎯 What's New
 
 ### Core Features
