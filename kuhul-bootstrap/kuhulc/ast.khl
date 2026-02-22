@@ -1,0 +1,4 @@
+⟁Pop ast.module
+
+Wo body = @input
+Ch'en { type: "Module", body: body }
