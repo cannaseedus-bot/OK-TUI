@@ -12,7 +12,6 @@ mod pipeline;
 mod registry;
 
 use backends::{Backend, CBackend, GPUBackend, SCXQ2Backend};
-use clap::Parser;
 use cli::CompilerConfig;
 use pipeline::CompilerPipeline;
 
@@ -26,7 +25,7 @@ fn main() -> anyhow::Result<()> {
     let mut pipeline = CompilerPipeline::new(registry);
     let ast = pipeline.compile(&config.input)?;
 
-    let backend: Box<dyn Backend> = match config.target.as_str() {
+    let backend: Box<dyn Backend> = match config.target.to_ascii_lowercase().as_str() {
         "c" => Box::new(CBackend::new()),
         "gpu" => Box::new(GPUBackend::new()),
         "scxq2" => Box::new(SCXQ2Backend::new()),
