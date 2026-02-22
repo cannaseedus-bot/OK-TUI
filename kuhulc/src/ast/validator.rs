@@ -11,10 +11,7 @@ pub fn validate(program: &Program, registry: &Registry) -> anyhow::Result<()> {
     );
 
     anyhow::ensure!(
-        program
-            .nodes
-            .iter()
-            .all(|n| !matches!(n, Node::Noop)),
+        program.nodes.iter().all(|n| !matches!(n, Node::Noop)),
         "MX2⟁☣ validation failed: unknown token in program"
     );
 
@@ -22,6 +19,9 @@ pub fn validate(program: &Program, registry: &Registry) -> anyhow::Result<()> {
 }
 
 pub fn validate_final(program: &Program) -> anyhow::Result<()> {
-    anyhow::ensure!(!program.nodes.is_empty(), "final validation failed: empty program");
+    anyhow::ensure!(
+        !program.nodes.is_empty(),
+        "final validation failed: empty program"
+    );
     Ok(())
 }

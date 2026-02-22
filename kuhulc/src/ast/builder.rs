@@ -29,7 +29,7 @@ pub fn build(parse_tree: ParseTree) -> anyhow::Result<Program> {
 }
 
 fn stable_id(input: &str) -> u32 {
-    input
-        .bytes()
-        .fold(2166136261u32, |hash, b| hash.wrapping_mul(16777619) ^ b as u32)
+    input.bytes().fold(2166136261u32, |hash, b| {
+        hash.wrapping_mul(16777619) ^ b as u32
+    })
 }

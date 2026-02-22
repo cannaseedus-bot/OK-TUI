@@ -11,3 +11,9 @@ pub struct CompilerConfig {
     #[arg(short, long)]
     pub target: String,
 }
+
+impl CompilerConfig {
+    pub fn parse() -> Self {
+        Parser::parse()
+    }
+}
