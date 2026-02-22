@@ -1,0 +1,5 @@
+// KUHUL standard primitives
+
+@flux.init(rate=60)
+
+⟁glyph.hash(target="std_init")

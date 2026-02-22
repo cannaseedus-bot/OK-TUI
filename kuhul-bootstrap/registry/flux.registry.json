@@ -1,0 +1,15 @@
+{
+  "@registry": "FLUX",
+  "@version": "1.0",
+  "@opcodes": {
+    "@flux.phase": {
+      "@id": 1001
+    },
+    "@flux.barrier": {
+      "@id": 1002
+    },
+    "@flux.init": {
+      "@id": 1003
+    }
+  }
+}
