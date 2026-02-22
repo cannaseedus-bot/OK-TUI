@@ -1,0 +1,11 @@
+⟁Pop compiler.main
+
+Wo src = std.io.read(args[0])
+Wo tokens = lexer.tokenize(src)
+Wo ast = parser.parse(tokens)
+Wo mlir = emit_mlir.compile(ast)
+Wo binary = emit_llvm.compile(mlir)
+
+std.io.write(args[1], binary)
+
+⟁Ch'en
