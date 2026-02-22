@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCXQ2Model",
+  "type": "object",
+  "required": ["magic", "version", "merkle", "tensors"],
+  "properties": {
+    "magic": {"const": "SCXQ2"},
+    "version": {"type": "integer", "minimum": 1},
+    "merkle": {"type": "string", "description": "hex-encoded sha256 root"},
+    "tensors": {
+      "type": "array",
+      "items": {"$ref": "./scxq2_tensor.schema.json"}
+    },
+    "meta": {"type": "object"}
+  },
+  "additionalProperties": false
+}
