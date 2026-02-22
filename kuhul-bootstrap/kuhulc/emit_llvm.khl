@@ -1,0 +1,7 @@
+⟁Pop emit_llvm.compile
+
+Wo module = @input
+
+Wo binary = llvm.codegen(module)
+
+Ch'en binary

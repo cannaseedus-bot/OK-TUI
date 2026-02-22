@@ -1,0 +1,4 @@
+⟁Pop main
+Wo t = "Tensor demo"
+std.io.print(t)
+⟁Ch'en

@@ -1,0 +1,9 @@
+⟁Pop ast.node
+
+Wo kind = @input.kind
+Wo value = @input.value
+
+Ch'en {
+    kind: kind,
+    value: value
+}

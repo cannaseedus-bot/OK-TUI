@@ -1,0 +1,10 @@
+⟁Pop lowering.emit
+
+Wo ast = @input
+
+Wo module = {
+    dialect: "kuhul",
+    ops: ast.body
+}
+
+Ch'en module

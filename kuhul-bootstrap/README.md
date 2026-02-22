@@ -1,48 +1,17 @@
-# KUHUL Bootstrap Compiler
+# KUHUL Self-Hosting Compiler
 
-Deterministic Atomic Block Compiler.
+This repository bootstraps the KUHUL compiler and enables full self-hosting.
 
-Supports:
+Pipeline:
 
-- Native C backend
-- WebGPU backend
-- SCXQ2 compressed backend
+KUHUL → AST → MLIR → LLVM / WebGPU / SCXQ2
 
-## Build
+Bootstrap stages:
 
-Linux / Mac:
+Stage0: Rust bootstrap compiler  
+Stage1: KUHUL compiler compiled by Stage0  
+Stage2: KUHUL compiler compiled by Stage1
 
-```bash
-./build/build.sh
-```
+Stage2 must match Stage1 binary hash.
 
-Windows:
-
-```powershell
-.\build\build.ps1
-```
-
-## Compile example
-
-```bash
-./target/release/kuhulc samples/hello.agl --target c --output output/hello.c
-```
-
-## Run native example
-
-```bash
-gcc output/hello.c runtime/agl_runtime.c -o hello
-./hello
-```
-
-## SCXQ2 output
-
-```bash
-./target/release/kuhulc samples/hello.agl --target scxq2 --output output/hello.scx
-```
-
-## GPU output
-
-```bash
-./target/release/kuhulc samples/gpu_demo.agl --target gpu --output output/gpu.ts
-```
+This proves self-hosting correctness.

@@ -1,0 +1,7 @@
+⟁Pop main
+
+Wo msg = "Hello KUHUL"
+
+std.io.print(msg)
+
+⟁Ch'en

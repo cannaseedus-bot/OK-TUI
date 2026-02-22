@@ -1,0 +1,5 @@
+⟁Pop emit_scxq2.compile
+
+Wo module = @input
+
+Ch'en scxq2.encode(module)

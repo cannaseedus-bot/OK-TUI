@@ -1,0 +1,4 @@
+⟁Pop main
+Wo flux = "Flux demo"
+std.io.print(flux)
+⟁Ch'en

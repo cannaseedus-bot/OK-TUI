@@ -1,0 +1,4 @@
+⟁Pop std.string.len
+
+Wo s = @input
+Ch'en s.length

@@ -1,0 +1,13 @@
+⟁Pop lexer.tokenize
+
+Wo src = @input
+Wo tokens = []
+
+Sek for c in src
+
+    tokens.push({
+        type: "char",
+        value: c
+    })
+
+Ch'en tokens

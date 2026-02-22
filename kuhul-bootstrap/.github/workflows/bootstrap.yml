@@ -1,0 +1,28 @@
+name: bootstrap
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build bootstrap
+        run: cargo build --release --manifest-path bootstrap/Cargo.toml
+
+      - name: build stage1
+        run: |
+          bootstrap/target/release/kuhulc_stage0 \
+          kuhulc/main.khl \
+          -o build/kuhulc_stage1
+
+      - name: build stage2
+        run: |
+          build/kuhulc_stage1 \
+          kuhulc/main.khl \
+          -o build/kuhulc_stage2
+
+      - name: verify
+        run: cmp build/kuhulc_stage1 build/kuhulc_stage2
