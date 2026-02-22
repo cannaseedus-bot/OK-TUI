@@ -52,3 +52,19 @@ name       bytes
 shape      rank * u32
 payload    bytes
 ```
+
+## HuggingFace one-command conversion
+
+You can convert directly from a HuggingFace repo without manually downloading checkpoint files:
+
+```bash
+python hf_to_scxq2.py Qwen/Qwen2-7B output/qwen2-7b.scxq2 --int4
+python hf_to_scxq2.py mistralai/Mistral-7B-v0.1 output/mistral.scxq2 --int8
+python hf_to_scxq2.py microsoft/phi-2 output/phi2.scxq2 --fp16
+```
+
+Install dependencies:
+
+```bash
+pip install torch transformers huggingface_hub tqdm numpy
+```
