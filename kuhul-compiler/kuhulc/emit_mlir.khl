@@ -1,0 +1,10 @@
+⟁Pop emit_mlir.compile
+
+Wo ast = @input
+
+Wo module = {
+  dialect: "kuhul",
+  ops: ast.body
+}
+
+Ch'en module
