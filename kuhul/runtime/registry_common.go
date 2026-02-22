@@ -35,3 +35,10 @@ func RegistryDelete(hive, key, valueName string) error {
 	// Not implemented on Unix systems
 	return nil
 }
+
+// RegistryListSubkeys lists all subkeys under a registry key
+// On Unix systems, this returns an empty list
+func RegistryListSubkeys(hive, key string) []string {
+	// Not implemented on Unix systems
+	return []string{}
+}

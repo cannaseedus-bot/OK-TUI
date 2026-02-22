@@ -101,6 +101,12 @@ var Builtins = map[string]BuiltinFunc{
 	"sys.registry_list":     builtinSysRegistryList,
 	"sys.registry_delete":   builtinSysRegistryDelete,
 	"sys.registry_subkeys":  builtinSysRegistrySubkeys,
+
+	// Network functions (Windows/Unix compatible)
+	"sys.port_available":     builtinSysPortAvailable,
+	"sys.discover_services":  builtinSysDiscoverServices,
+	"sys.local_ip":           builtinSysLocalIP,
+	"sys.wait_for_port":      builtinSysWaitForPort,
 }
 
 // Math builtins
@@ -1064,4 +1070,40 @@ func toBool(v interface{}) bool {
 	default:
 		return true
 	}
+}
+
+// Network builtins
+
+func builtinSysPortAvailable(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	port := int(toFloat(args[0]))
+	return PortAvailable(port)
+}
+
+func builtinSysDiscoverServices(args ...interface{}) interface{} {
+	discovery := DiscoverServices()
+	return map[string]interface{}{
+		"ollama":       discovery.Ollama,
+		"orchestrator": discovery.Orchestrator,
+	}
+}
+
+func builtinSysLocalIP(args ...interface{}) interface{} {
+	return GetLocalIPAddress()
+}
+
+func builtinSysWaitForPort(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	port := int(toFloat(args[0]))
+	maxWait := 30 // Default 30 seconds
+
+	if len(args) > 1 {
+		maxWait = int(toFloat(args[1]))
+	}
+
+	return WaitForPort(port, maxWait)
 }
