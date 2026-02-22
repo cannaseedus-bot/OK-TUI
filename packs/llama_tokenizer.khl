@@ -1,0 +1,106 @@
+⟁Pop⟁ llama_tokenizer_manifest {
+  "name": "llama_tokenizer",
+  "version": "1.0.0",
+  "description": "Llama BPE Tokenizer implemented in K'UHUL",
+  "author": "K'UHUL Contributors",
+  "license": "MIT"
+}
+
+⟁Xul⟁ llama_tokenizer
+  ⟁Pop⟁ vocab_setup {
+    "vocab_size": 32000,
+    "bos_token": 1,
+    "eos_token": 2,
+    "pad_token": 0,
+    "unk_token": 3
+  }
+
+  ⟁Pop⟁ encode(text) ⟁Xul⟁
+    ⟁Wo⟁ text = @normalize_text(text)
+    ⟁Wo⟁ words = @split_words(text)
+    ⟁Wo⟁ tokens = []
+
+    ⟁K'ayab⟁ i from 0 to @length(words)
+      ⟁Wo⟁ word = words[i]
+      ⟁Wo⟁ word_tokens = @encode_word(word)
+      ⟁Wo⟁ tokens = @concat(tokens, word_tokens)
+    ⟁Kumk'u⟁
+
+    ⟁Ch'en⟁ tokens
+  ⟁Xul⟁
+
+  ⟁Pop⟁ decode(tokens) ⟁Xul⟁
+    ⟁Wo⟁ vocab_reverse = @build_reverse_vocab()
+    ⟁Wo⟁ parts = []
+
+    ⟁K'ayab⟁ i from 0 to @length(tokens)
+      ⟁Wo⟁ token_id = tokens[i]
+      ⟁Wo⟁ token_str = vocab_reverse[token_id]
+
+      ⟁Sek⟁ token_str != null
+        ⟁Wo⟁ parts = @concat(parts, [token_str])
+      ⟁Xul⟁
+    ⟁Kumk'u⟁
+
+    ⟁Wo⟁ result = @join(parts, " ")
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ encode_word(word) ⟁Xul⟁
+    ⟁Wo⟁ vocab = @get_vocab()
+
+    ⟁Sek⟁ vocab[word] != null
+      ⟁Ch'en⟁ [vocab[word]]
+    ⟁Xul⟁
+
+    ⟁Wo⟁ chars = @split_chars(word)
+    ⟁Wo⟁ tokens = []
+
+    ⟁K'ayab⟁ i from 0 to @length(chars)
+      ⟁Wo⟁ char = chars[i]
+      ⟁Wo⟁ char_id = vocab[char]
+
+      ⟁Sek⟁ char_id != null
+        ⟁Wo⟁ tokens = @concat(tokens, [char_id])
+      ⟁Xul⟁ @else
+        ⟁Wo⟁ tokens = @concat(tokens, [vocab["<unk>"]])
+      ⟁Xul⟁
+    ⟁Kumk'u⟁
+
+    ⟁Ch'en⟁ tokens
+  ⟁Xul⟁
+
+  ⟁Pop⟁ normalize_text(text) ⟁Xul⟁
+    ⟁Wo⟁ normalized = @lowercase(text)
+    ⟁Wo⟁ normalized = @remove_extra_spaces(normalized)
+    ⟁Ch'en⟁ normalized
+  ⟁Xul⟁
+
+  ⟁Pop⟁ fingerprint(tokens) ⟁Xul⟁
+    ⟁Wo⟁ fp = @scxq2_fingerprint(tokens)
+    ⟁Ch'en⟁ fp
+  ⟁Xul⟁
+⟁Xul⟁
+
+C@@L HANDLER llama.tokenize
+  ⟁Pop⟁ tokenize_handler {
+    "params": {
+      "text": "string"
+    },
+    "returns": {
+      "tokens": "array[int]",
+      "token_count": "int",
+      "fingerprint": "string"
+    }
+  }
+
+  ⟁Wo⟁ text = @get_param("text")
+  ⟁Wo⟁ tokens = llama_tokenizer.encode(text)
+  ⟁Wo⟁ fingerprint = llama_tokenizer.fingerprint(tokens)
+
+  ⟁Ch'en⟁ {
+    "tokens": tokens,
+    "token_count": @length(tokens),
+    "fingerprint": fingerprint
+  }
+C@@L END

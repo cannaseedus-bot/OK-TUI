@@ -269,6 +269,13 @@ func (rs *RuntimeState) GetASXRAM(key string) (interface{}, bool) {
 	return v, ok
 }
 
+// DeleteASXRAM deletes a value from ASX-RAM
+func (rs *RuntimeState) DeleteASXRAM(key string) {
+	rs.mu.Lock()
+	delete(rs.ASXRAM, key)
+	rs.mu.Unlock()
+}
+
 // GetState returns a snapshot of the runtime state
 func (rs *RuntimeState) GetState() map[string]interface{} {
 	rs.mu.RLock()

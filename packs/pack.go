@@ -418,7 +418,7 @@ func (p *ASXRAMPack) handleSet(ctx *runtime.Context) (interface{}, error) {
 
 func (p *ASXRAMPack) handleDelete(ctx *runtime.Context) (interface{}, error) {
 	key, _ := ctx.Body["key"].(string)
-	p.state.SetASXRAM(key, nil)
+	p.state.DeleteASXRAM(key)
 	return map[string]interface{}{
 		"ok":  true,
 		"key": key,
