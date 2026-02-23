@@ -69,6 +69,81 @@ Only one layer is frozen forever: **π**. Everything else is a host, projection,
 - **🤖 Agent OS vs MoE**: [`kuhul/AGENT_OS_VS_MOE.md`](kuhul/AGENT_OS_VS_MOE.md) - Comprehensive comparison
 - **🧪 Runnable Tests**: `go test ./kuhul/ -bench=. -benchmem`
 
+## 🧠 KHANARY Expert LLM Training
+
+Train domain-specific KHANARY experts using high-quality instruction and code datasets, then compile to deterministic 32-bit KNU binaries.
+
+### Training Pipeline
+
+```
+Curated Datasets (OpenOrca, Qwen-Coder, Code-Feedback, Cosmopedia)
+        ↓
+Supervised Fine-Tuning (2-3 epochs on domain-specific data)
+        ↓
+KHANARY Compilation (Extract glyphs → Encode as 32-bit KNUs)
+        ↓
+Validated Binaries (.khμ files, determinism verified)
+```
+
+### Expert Training by Domain
+
+| Expert | Primary Dataset | Secondary | Tertiary | Training Data |
+|--------|---|---|---|---|
+| **Python** | Qwen-Coder (60%) | Code-Feedback (20%) | OpenHermes (15%) | 1.2M examples |
+| **Security** | OpenOrca (50%) | Qwen-Coder (30%) | UltraChat (15%) | 800K examples |
+| **Architecture** | Cosmopedia (50%) | OpenOrca (35%) | UltraChat (15%) | 450K examples |
+| **Performance** | OpenMathInstruct (45%) | Qwen-Coder (35%) | Cosmopedia (20%) | 500K examples |
+| **SQL** | Qwen-Coder (60%) | Code-Feedback (25%) | OpenMathInstruct (15%) | 600K examples |
+
+### Training Results (Expected)
+
+```
+PythonExpert v2.1          │ SecurityExpert v2.0      │ ArchitectureExpert v1.2
+├─ Accuracy: 95%           │ ├─ Accuracy: 94%        │ ├─ Accuracy: 88%
+├─ Determinism: 100% ✓     │ ├─ False Neg Rate: <1%  │ ├─ Reasoning: optimized
+├─ Latency: 2.0ms          │ ├─ Latency: 2.1ms       │ ├─ Latency: 1.9ms
+├─ Binary Size: 150KB       │ ├─ Binary Size: 165KB   │ ├─ Binary Size: 140KB
+└─ Training: Qwen-2.5-7B   │ └─ Training: Qwen-2.5   │ └─ Training: Qwen-2.5
+
+Dataset Registry:
+  • Qwen-2.5-Coder: 2M examples (code patterns)
+  • Code-Feedback: 200K examples (verified correctness)
+  • OpenOrca: 1M examples (GPT-4 quality reasoning)
+  • Cosmopedia: 30M documents (diverse knowledge)
+  • OpenMathInstruct: 10M examples (chain-of-thought math)
+```
+
+### Quick Start: Train Your Own Expert
+
+```bash
+# 1. Download datasets
+python scripts/download_datasets.py --expert python
+
+# 2. Fine-tune on domain data
+python scripts/train_expert.py --config config/python_expert.yaml
+
+# 3. Compile to KHANARY binary
+python scripts/compile_to_khanary.py \
+  --model checkpoints/python_v2.1/final \
+  --output experts/python_v2.1.khμ
+
+# 4. Verify determinism (1000 runs)
+python scripts/validate_determinism.py \
+  --binary experts/python_v2.1.khμ \
+  --runs 1000
+
+# 5. Benchmark performance
+python scripts/benchmark_expert.py \
+  --binary experts/python_v2.1.khμ \
+  --dataset humaneval-python
+```
+
+### Documentation
+
+- **Full Training Guide**: [`kuhul/KHANARY_EXPERT_TRAINING.md`](kuhul/KHANARY_EXPERT_TRAINING.md)
+- **Expert System**: [`kuhul/KHANARY_EXPERT_SYSTEM.md`](kuhul/KHANARY_EXPERT_SYSTEM.md)
+- **Integration**: [`kuhul/KHANARY_AGENT_INTEGRATION.md`](kuhul/KHANARY_AGENT_INTEGRATION.md)
+
 ## 🏗️ Architecture: Complete K'UHUL Platform
 
 ### Platform Pipeline
