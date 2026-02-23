@@ -66,6 +66,7 @@ Only one layer is frozen forever: **π**. Everything else is a host, projection,
 - **📖 Architecture Guide**: [`kuhul/PLATFORM_OVERVIEW.md`](kuhul/PLATFORM_OVERVIEW.md)
 - **⚡ Performance Benchmarks**: [`kuhul/BENCHMARKS.md`](kuhul/BENCHMARKS.md)
 - **📊 Actual Results**: [`kuhul/BENCHMARK_RESULTS.md`](kuhul/BENCHMARK_RESULTS.md)
+- **🤖 Agent OS vs MoE**: [`kuhul/AGENT_OS_VS_MOE.md`](kuhul/AGENT_OS_VS_MOE.md) - Comprehensive comparison
 - **🧪 Runnable Tests**: `go test ./kuhul/ -bench=. -benchmem`
 
 ## 🏗️ Architecture: Complete K'UHUL Platform
