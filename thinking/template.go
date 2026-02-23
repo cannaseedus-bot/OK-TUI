@@ -90,6 +90,9 @@ func InferTags(t *template.Template) (string, string) {
 				// go up to the nearest ancestor that is a *parse.ListNode
 				for i := len(ancestors) - 1; i >= 0; i-- {
 					if l, ok := ancestors[i].(*parse.ListNode); ok {
+						if len(l.Nodes) == 0 {
+							break
+						}
 						firstNode := l.Nodes[0]
 						if t, ok := firstNode.(*parse.TextNode); ok {
 							openingTag = strings.TrimSpace(t.String())
@@ -123,7 +126,7 @@ func rangeUsesField(rangeNode *parse.RangeNode, field string) bool {
 	enterFn := func(n parse.Node) bool {
 		switch x := n.(type) {
 		case *parse.FieldNode:
-			if x.Ident[0] == field {
+			if len(x.Ident) > 0 && x.Ident[0] == field {
 				found = true
 			}
 		}
