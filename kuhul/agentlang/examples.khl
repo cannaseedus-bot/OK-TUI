@@ -1,0 +1,284 @@
+// K'UHUL Agent Language Examples
+// Agents are defined with @agent directive and compile to the 5-tier runtime
+
+// ========== AGENT 1: Planner Agent ==========
+
+@agent planner
+  :type "planner"
+  :role "Decomposes tasks into semantic subtasks"
+  :capabilities ["task_decomposition" "semantic_reasoning" "constraint_validation"]
+
+  // Behavior tree definition
+  @behavior
+    :root "evaluate_task"
+    :nodes {
+      evaluate_task: {
+        :type "selector"
+        :children ["check_memory" "semantic_decompose"]
+      }
+      check_memory: {
+        :type "condition"
+        :condition "memory.has_relevant_context"
+      }
+      semantic_decompose: {
+        :type "action"
+        :action "generate_subtasks"
+      }
+    }
+
+  // Reward signals (influence decision-making)
+  @rewards
+    :correctness 0.8
+    :efficiency 0.6
+    :collaboration 0.4
+    :conflict_penalty -0.5
+
+  // Memory modules
+  @memory
+    :short_term {
+      :capacity 12
+      :decay_rate 0.15
+      :format "key-value"
+    }
+    :long_term {
+      :capacity 500
+      :consolidation "semantic_clustering"
+      :retrieval "embedding_similarity"
+    }
+
+  // Goal definitions
+  @goals
+    {
+      :name "understand_task"
+      :priority 1.0
+      :deadline "immediate"
+    }
+    {
+      :name "decompose_subtasks"
+      :priority 0.9
+      :deadline "short_term"
+    }
+
+// ========== AGENT 2: Executor Agent ==========
+
+@agent executor
+  :type "executor"
+  :role "Implements code and executes tasks"
+  :capabilities ["code_generation" "unit_test_generation" "self_review"]
+
+  @behavior
+    :root "implement_feature"
+    :nodes {
+      implement_feature: {
+        :type "sequence"
+        :children ["generate_code" "self_review" "test_output"]
+      }
+      generate_code: {
+        :type "action"
+        :action "write_code"
+      }
+      self_review: {
+        :type "action"
+        :action "lint_and_review"
+      }
+      test_output: {
+        :type "action"
+        :action "run_tests"
+      }
+    }
+
+  @rewards
+    :test_pass 1.0
+    :code_quality 0.7
+    :refactor 0.3
+    :error_penalty -0.8
+
+// ========== AGENT 3: Analyst Agent (ML/Data) ==========
+
+@agent analyst
+  :type "analyst"
+  :role "Analyzes data, embeddings, and patterns"
+  :capabilities ["embedding_lookup" "entropy_analysis" "pattern_detection"]
+
+  @behavior
+    :root "analyze_input"
+    :nodes {
+      analyze_input: {
+        :type "selector"
+        :children ["embedding_lookup" "entropy_check"]
+      }
+      embedding_lookup: {
+        :type "action"
+        :action "retrieve_embeddings"
+      }
+      entropy_check: {
+        :type "action"
+        :action "compute_entropy"
+      }
+    }
+
+  @rewards
+    :entropy_reduction 0.5
+    :similarity_accuracy 0.9
+
+// ========== KNOWLEDGE GRAPH ==========
+
+@knowledge_graph
+  :nodes [
+    { :id "semantic_mapper" :type "concept" :confidence 0.95 }
+    { :id "planner_core" :type "reasoning_unit" :confidence 0.92 }
+    { :id "execution_unit" :type "action_generator" :confidence 0.89 }
+  ]
+
+  :edges [
+    { :from "semantic_mapper" :to "planner_core" :type "causal" :strength 0.93 }
+    { :from "planner_core" :to "execution_unit" :type "causal" :strength 0.97 }
+  ]
+
+  :inference_rules [
+    "A→B and B→C implies A→C"
+    "pattern P in context C implies episodic_memory"
+  ]
+
+// ========== META-COGNITION ==========
+
+@meta_cognition
+  :introspection_loops [
+    {
+      :name "self_evaluation"
+      :frequency "after_task_completion"
+      :monitors ["decision_quality" "resource_utilization"]
+      :adaptations ["adjust_behavior_weights"]
+    }
+    {
+      :name "error_analysis"
+      :frequency "on_failure"
+      :monitors ["error_patterns" "recovery_success"]
+      :adaptations ["update_recovery_strategy"]
+    }
+  ]
+
+// ========== TEMPORAL REASONING ==========
+
+@temporal_reasoning
+  :representation "interval_temporal_logic"
+
+  :horizons [
+    {
+      :name "immediate"
+      :duration "1_minute"
+      :replan_frequency "continuous"
+    }
+    {
+      :name "short_term"
+      :duration "1_hour"
+      :replan_frequency "5_minutes"
+    }
+    {
+      :name "long_term"
+      :duration "1_week"
+      :replan_frequency "1_day"
+    }
+  ]
+
+// ========== MULTI-AGENT NEGOTIATION ==========
+
+@negotiation
+  :style "consensus"
+
+  :phases [
+    { :name "proposal" :description "Agents propose solutions" }
+    { :name "critique" :description "Agents critique proposals" }
+    { :name "revision" :description "Proposals revised based on feedback" }
+    { :name "agreement" :description "Consensus reached" }
+  ]
+
+  :rules [
+    "Agents must justify proposals with reasoning"
+    "Conflicts resolved by planner agent"
+    "ML agent provides statistical evidence"
+  ]
+
+// ========== ERROR HANDLING ==========
+
+@error_handling
+  :fault_tolerance {
+    :transient "retry_with_backoff"
+    :persistent "escalate_to_human"
+    :critical "safe_shutdown"
+  }
+
+  :recovery_strategies [
+    "rollback_to_checkpoint"
+    "alternative_path_execution"
+    "graceful_degradation"
+  ]
+
+// ========== VALUE SYSTEM ==========
+
+@value_system
+  :core_values [
+    { :name "helpfulness" :weight 0.4 :measurement "user_feedback" }
+    { :name "efficiency" :weight 0.3 :measurement "resource_utilization" }
+    { :name "safety" :weight 0.3 :measurement "constraint_violations" }
+  ]
+
+  :conflict_resolution "pareto_optimization"
+  :override_rules [
+    "safety_violation_always_overrides"
+  ]
+
+// ========== EXAMPLE: Agent Invocation ==========
+
+// Create a planner agent instance
+wo my_planner (planner
+  :goal "design_system"
+  :constraints ["time_limit: 1_hour" "budget: 10_units"])
+
+// Create executor agent instance
+wo my_executor (executor
+  :task "implement_design"
+  :quality_threshold 0.9)
+
+// Create analyst agent instance
+wo my_analyst (analyst
+  :data_source "logs"
+  :analysis_type "pattern_detection")
+
+// Orchestrate agent collaboration
+pop (@call
+  :agents [my_planner my_executor my_analyst]
+  :protocol "consensus"
+  :max_iterations 5
+  :timeout "10_minutes")
+
+// Store results in memory
+wo task_results (@mem get "collaboration_results")
+
+// Trigger meta-cognition
+pop (@call
+  :introspection_loop "self_evaluation"
+  :evaluate [my_planner my_executor my_analyst])
+
+// Query knowledge graph
+wo insights (knowledge_graph.query
+  :pattern "semantic_mapper"
+  :variables ["nodes" "edges"])
+
+// Temporal planning
+pop (@call
+  :temporal_horizon "short_term"
+  :agents [my_planner]
+  :replan_if_needed true)
+
+// Handle errors gracefully
+@try {
+  pop (my_executor :task "risky_operation")
+} @catch error {
+  wo recovery_strategy (@error_handling
+    :fault_level "persistent"
+    :error error
+    :context "execution")
+  pop (@call
+    :strategy recovery_strategy)
+}
