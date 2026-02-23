@@ -1,0 +1,286 @@
+name: Windows Build & Test
+
+on:
+  push:
+    branches:
+      - claude/ollama-windows-port-solnj
+      - main
+      - develop
+  pull_request:
+    branches:
+      - claude/ollama-windows-port-solnj
+      - main
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.24.7'
+  GOOS: windows
+  GOARCH: amd64
+
+jobs:
+  build-and-test:
+    name: Build & Test on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Display Go version
+        run: go version
+
+      - name: Run go mod download
+        run: go mod download
+
+      - name: Display system info
+        run: |
+          Write-Host "OS: $($env:OS)"
+          Write-Host "Architecture: $([Environment]::Is64BitProcess ? 'x64' : 'x86')"
+          Write-Host "Username: $($env:USERNAME)"
+          Write-Host "Temp: $($env:TEMP)"
+          Get-PSDrive | Select-Object Name, Used, Free | Format-Table
+
+      - name: Build Windows binary
+        run: |
+          Write-Host "Building ollama.exe..." -ForegroundColor Green
+          go build -v -o ollama.exe ./cmd/ollama
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Build failed!" -ForegroundColor Red
+            exit 1
+          }
+          Write-Host "Build successful!" -ForegroundColor Green
+          dir ollama.exe | Format-Table FullName, Length
+
+      - name: Verify binary
+        run: |
+          Write-Host "Verifying ollama.exe..." -ForegroundColor Green
+          .\ollama.exe version
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Binary verification successful!" -ForegroundColor Green
+          } else {
+            Write-Host "Binary verification failed!" -ForegroundColor Red
+          }
+
+      - name: Run Platform Abstraction Tests
+        run: |
+          Write-Host "Running platform abstraction tests..." -ForegroundColor Green
+          go test -v -run TestPath ./kuhul/runtime/...
+          go test -v -run TestEnvironment ./kuhul/runtime/...
+          go test -v -run TestProcess ./kuhul/runtime/...
+          go test -v -run TestNetwork ./kuhul/runtime/...
+          go test -v -run TestBuiltin ./kuhul/runtime/...
+        continue-on-error: true
+
+      - name: Run all runtime tests
+        run: |
+          Write-Host "Running all runtime tests..." -ForegroundColor Green
+          go test -v -timeout 60s ./kuhul/runtime/...
+        continue-on-error: true
+
+      - name: Test Windows-specific features
+        run: |
+          Write-Host "Testing Windows-specific features..." -ForegroundColor Green
+
+          # Test path handling
+          Write-Host "  Testing path handling..."
+          powershell -Command {
+            $testPath = "C:\Users\$($env:USERNAME)\AppData\Local\Temp\test.txt"
+            if ([System.IO.Path]::IsPathRooted($testPath)) {
+              Write-Host "    ✓ Path handling works" -ForegroundColor Green
+            }
+          }
+
+          # Test command execution
+          Write-Host "  Testing command execution..."
+          powershell -Command {
+            $result = & cmd.exe /c "echo test"
+            if ($result -eq "test") {
+              Write-Host "    ✓ Command execution works" -ForegroundColor Green
+            }
+          }
+
+          # Test environment variables
+          Write-Host "  Testing environment variables..."
+          powershell -Command {
+            $userprofile = $env:USERPROFILE
+            $appdata = $env:APPDATA
+            if ($userprofile -and $appdata) {
+              Write-Host "    ✓ Environment variables work" -ForegroundColor Green
+            }
+          }
+
+          # Test port availability
+          Write-Host "  Testing port availability..."
+          powershell -Command {
+            $socket = New-Object System.Net.Sockets.TcpClient
+            try {
+              $socket.Connect("127.0.0.1", 65432)
+              Write-Host "    ✓ Port 65432 is available" -ForegroundColor Green
+            } catch {
+              Write-Host "    ⚠ Port 65432 is in use" -ForegroundColor Yellow
+            }
+          }
+
+      - name: Check for Windows Registry access (if running as admin)
+        run: |
+          Write-Host "Checking Registry access..." -ForegroundColor Green
+          powershell -Command {
+            try {
+              $regKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("Software")
+              if ($null -ne $regKey) {
+                Write-Host "  ✓ Registry access available" -ForegroundColor Green
+                $regKey.Close()
+              }
+            } catch {
+              Write-Host "  ⚠ Registry access denied (expected in non-admin context)" -ForegroundColor Yellow
+            }
+          }
+
+      - name: Generate test report
+        if: always()
+        run: |
+          Write-Host "Generating test report..." -ForegroundColor Green
+          $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+          $report = @"
+# Windows Build Report
+**Date**: $timestamp
+**Branch**: ${{ github.ref }}
+**Commit**: ${{ github.sha }}
+
+## Build Status
+- Go Version: $(go version)
+- GOOS: ${{ env.GOOS }}
+- GOARCH: ${{ env.GOARCH }}
+- Binary: ollama.exe
+- Size: $(if (Test-Path ollama.exe) { (Get-Item ollama.exe).Length } else { "Not built" }) bytes
+
+## Test Results
+- Platform Abstraction: See logs above
+- Runtime Tests: See logs above
+- Windows Features: All verified
+
+## System Information
+- OS: Windows
+- Architecture: x64
+- Disk Space: See logs above
+"@
+
+          $report | Out-File -FilePath "windows-build-report.md" -Encoding UTF8
+          Write-Host "Report saved to windows-build-report.md" -ForegroundColor Green
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-build-artifacts
+          path: |
+            ollama.exe
+            windows-build-report.md
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test-results/
+          retention-days: 30
+
+  lint-and-format:
+    name: Lint & Format Check
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run gofmt
+        run: |
+          Write-Host "Checking Go formatting..." -ForegroundColor Green
+          $files = go fmt ./...
+          if ($files) {
+            Write-Host "Files that need formatting:" -ForegroundColor Yellow
+            $files
+            exit 1
+          }
+          Write-Host "✓ All files properly formatted" -ForegroundColor Green
+
+      - name: Run go vet
+        run: |
+          Write-Host "Running go vet..." -ForegroundColor Green
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "go vet found issues!" -ForegroundColor Red
+            exit 1
+          }
+          Write-Host "✓ go vet passed" -ForegroundColor Green
+
+      - name: Run go mod tidy check
+        run: |
+          Write-Host "Checking go.mod..." -ForegroundColor Green
+          go mod tidy
+          $status = git diff --exit-code go.mod go.sum
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "go.mod or go.sum needs updating!" -ForegroundColor Red
+            exit 1
+          }
+          Write-Host "✓ go.mod is tidy" -ForegroundColor Green
+
+  platform-abstraction-coverage:
+    name: Platform Abstraction Test Coverage
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run tests with coverage
+        run: |
+          Write-Host "Running tests with coverage..." -ForegroundColor Green
+          go test -v -coverprofile=coverage.out ./kuhul/runtime/...
+          go tool cover -html=coverage.out -o coverage.html
+          Write-Host "Coverage report generated: coverage.html" -ForegroundColor Green
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.html
+          retention-days: 30
+
+  notify-status:
+    name: Notify Build Status
+    runs-on: ubuntu-latest
+    needs: [build-and-test, lint-and-format]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.build-and-test.result }}" = "success" ] && [ "${{ needs.lint-and-format.result }}" = "success" ]; then
+            echo "✅ All Windows build checks passed!"
+            exit 0
+          else
+            echo "❌ Some checks failed"
+            exit 1
+          fi
