@@ -2,7 +2,16 @@
 
 ## Overview
 
-**KHANARY** is the native K'UHUL binary language and LLM runtime that enables the **K'UHUL Agent OS** to interface with compiled, domain-specific expert binaries. Instead of generic neural network experts (MoE), KHANARY experts are deterministic, code-optimized binaries specialized for specific programming languages and domains.
+**KHANARY** (Multi-alphabet Semantic Encoding & Execution Substrate) is the native K'UHUL binary language that enables the **K'UHUL Agent OS** to interface with compiled, domain-specific expert binaries.
+
+**Key Properties:**
+- **32-bit KNU (Knowledge Numeric Unit)** encoding with `KHΛ-2-DENSE-32` profile
+- **Deterministic neural compute pipelines** with CPU-first architecture
+- **Glyph-based semantics** (KUHUL glyphs encoded into fixed-width words)
+- **Replay-safe execution** - same input always produces same output
+- **Lightweight WebGPU offload** - optional iGPU acceleration without heavyweight GPU dependencies
+
+Instead of generic neural network experts (MoE), KHANARY experts are deterministic, code-optimized binaries specialized for specific programming languages and domains.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -37,7 +46,110 @@
 
 ---
 
-## 1. Architecture: Three-Layer Stack
+## 1. KHANARY Encoding Layer: KHΛ-2-DENSE-32 Profile
+
+### 1.1 32-bit KNU Format
+
+Each KHANARY Unit (KNU) is a single 32-bit word encoding a KUHUL semantic glyph:
+
+```
+Bits   | 31–28 | 27–20     | 19–16 | 15–12 | 11–4  | 3–1       | 0
+Field  | VER   | GLYPH_ID  | ARITY | FLAGS | PAYLOAD | AUTH_CLASS| PARITY
+Width  | 4     | 8         | 4     | 4     | 8     | 3         | 1
+─────────────────────────────────────────────────────────────────────
+Purpose| Version| Semantic Op| Operands| Mode | Data | Authority | Integrity
+```
+
+**Field Definitions:**
+- **VER (31–28)**: KHANARY version (0x2 for v0.2)
+- **GLYPH_ID (27–20)**: KUHUL glyph identifier (0x00–0xFF)
+- **ARITY (19–16)**: Operand count (0–15)
+- **FLAGS (15–12)**: Mode flags (IMM=0x1, BIN_REF=0x2, SHAPE_DESC=0x4)
+- **PAYLOAD (11–4)**: Immediate data or descriptor byte
+- **AUTH_CLASS (3–1)**: Authority level (π/tenant/role)
+- **PARITY (0)**: Even parity over bits [31:1]
+
+### 1.2 Glyph Categories
+
+**Arithmetic/Stack (0x00–0x0F):**
+- `G_NOP` (0x00): No operation
+- `G_CONST_I8` (0x01): Push 8-bit signed int
+- `G_ADD_I32` (0x02): Add top two i32
+- `G_RET` (0x03): Return from function
+
+**Control Flow (0x10–0x1F):**
+- `G_IFZ_JUMP8` (0x10): Conditional jump
+- `G_JUMP8` (0x11): Unconditional jump
+- `G_WHILE_HEAD` (0x12): Loop marker
+- `G_WHILE_TAIL` (0x13): Loop tail marker
+
+**Function Calls (0x20–0x2F):**
+- `G_FUNC_DEF` (0x20): Function definition
+- `G_FUNC_END` (0x21): Function end
+- `G_CALL` (0x22): Function call
+
+**Tensor Operations (0x30–0x3F):**
+- `G_LOAD_BIN_TENSOR` (0x30): Load tensor from .stb file
+- `G_MATMUL` (0x31): Matrix multiplication
+- `G_ACTIVATE` (0x32): Activation function
+
+### 1.3 Execution Stack
+
+Each expert runs in a **stack-based execution model:**
+
+```
+┌───────────────────────────┐
+│   KNU Program Stream      │  KNUs fetched sequentially
+├───────────────────────────┤
+│   Execution Stack         │  Values pushed/popped
+│   (LIFO)                  │
+├───────────────────────────┤
+│   Frame Context           │  Function state
+│   (Local variables)       │
+├───────────────────────────┤
+│   Tensor Register File    │  Tensor handles
+│   (.stb references)       │
+└───────────────────────────┘
+```
+
+**Execution Model:**
+- Linear KNU instruction stream
+- Stack-based value passing
+- Frame-based function scoping
+- Tensor handles for efficient memory references
+
+---
+
+## 2. Architecture: Three-Layer Stack
+
+### Complete Stack
+
+```
+┌─────────────────────────────────────────────────────┐
+│     K'UHUL Agent OS (Multi-Agent Orchestration)     │
+│  • Planner, Executor, Analyst agents                │
+│  • Multi-phase negotiation                          │
+│  • Task assignment & meta-cognition                 │
+├─────────────────────────────────────────────────────┤
+│       KUHUL Layer (Semantic Glyphs)                 │
+│  • Glyph definitions (tensor, attention, control)   │
+│  • Expert domain knowledge encoded as glyphs        │
+├─────────────────────────────────────────────────────┤
+│  KHANARY Layer (32-bit KNU Encoding)                │
+│  • KHΛ-2-DENSE-32 profile encoding                  │
+│  • Stack-based execution model                      │
+│  • Deterministic replay guarantees                  │
+├─────────────────────────────────────────────────────┤
+│     Backend Runtime (CPU / WebGPU)                  │
+│  • Native code generation                          │
+│  • Optional iGPU acceleration                       │
+│  • Deterministic execution trace                    │
+├─────────────────────────────────────────────────────┤
+│   KUHUL π (Pure Deterministic Core)                 │
+│   • Field compression & curvature                   │
+│   • Lawful geometry & collapse                      │
+└─────────────────────────────────────────────────────┘
+```
 
 ### Layer 1: K'UHUL Agent OS (Orchestration)
 
@@ -48,69 +160,73 @@
 - Expert selection logic
 - Result interpretation
 
-```go
-// Agent OS makes strategic decisions
+```
 Agent: "I need to refactor Python code for performance"
   ├─ Planner: "Decompose into: analysis, optimization, verification"
-  ├─ Executor: "Assign to Python Expert"
+  ├─ Executor: "Assign to PythonExpert binary"
   ├─ Analyst: "Verify output quality"
-  └─ Decision: "Invoke PythonExpert with refactoring task"
+  └─ Decision: "Invoke KHANARY binary with execution timeout"
 ```
 
 **Communication:**
 - Natural language queries from agents
-- Expert availability assessment
+- Expert binary availability assessment
 - Task context and constraints
 - Performance targets and quality gates
 
-### Layer 2: KHANARY Expert Interface
+### Layer 2: KHANARY Compilation & Invocation
 
 **Responsibilities:**
-- Binary expert lifecycle management
+- Compile expert domain knowledge to KHANARY KNUs
+- Manage binary expert lifecycle
 - Task-to-expert routing
-- Protocol-based communication
+- Deterministic execution
 - Result aggregation
-- Performance monitoring
 
 ```
-┌─────────────────────────────────────────┐
-│    KHANARY Expert Interface             │
-├─────────────────────────────────────────┤
-│ Expert Registry                         │
-│  ├─ PythonExpert (v2.1)                │
-│  ├─ JavaScriptExpert (v1.8)            │
-│  ├─ RustExpert (v3.0)                  │
-│  ├─ SQLExpert (v2.5)                   │
-│  └─ ArchitectureExpert (v1.2)          │
-│                                         │
-│ Protocol Handler                       │
-│  ├─ Binary invocation                  │
-│  ├─ Stdin/stdout streams               │
-│  ├─ Shared memory regions              │
-│  └─ Error handling & timeouts          │
-│                                         │
-│ Result Processor                       │
-│  ├─ Parse expert output                │
-│  ├─ Merge results from multiple experts│
-│  ├─ Assess confidence scores           │
-│  └─ Detect conflicts/contradictions    │
-└─────────────────────────────────────────┘
+Expert Domain Knowledge
+        ↓
+┌──────────────────────────────────────────┐
+│  KHANARY Compiler                        │
+│  • Convert domain rules to KUHUL glyphs  │
+│  • Encode glyphs as 32-bit KNUs          │
+│  • Verify parity & integrity             │
+└──────────────────────────────────────────┘
+        ↓
+Expert KHANARY Binary (.khμ)
+├─ Glyph stream (KNUs)
+├─ Function table (entry points)
+├─ Tensor descriptors (.stb references)
+└─ Metadata (version, authority, hash)
+        ↓
+┌──────────────────────────────────────────┐
+│  KHANARY Runtime                         │
+│  • Load binary & KNUs                    │
+│  • Execute stack-based KNU program       │
+│  • Access .stb tensor files              │
+│  • Optional WebGPU offload               │
+└──────────────────────────────────────────┘
+        ↓
+Deterministic Results
+├─ Analysis findings
+├─ Optimization recommendations
+└─ Confidence scores
 ```
 
 **Key Features:**
-- **Binary Protocol:** Efficient serialization (MessagePack/Protobuf)
-- **Streaming:** Large outputs handled via streams
-- **Versioning:** Multiple expert versions simultaneously
-- **Timeouts:** Resource-bounded execution
-- **Monitoring:** Performance metrics & health checks
+- **Deterministic:** Same input always produces same output (replay-safe)
+- **Efficient:** 32-bit fixed-width encoding, minimal overhead
+- **Verifiable:** Even parity over all bits ensures integrity
+- **Stackable:** Multiple KNUs form complete expert programs
+- **Portable:** CPU-first with optional WebGPU acceleration
 
-### Layer 3: Code-Specific Expert Binaries
+### Layer 3: Code-Specific KHANARY Expert Binaries
 
 **Each Expert is:**
-- Compiled KHANARY binary
-- Domain-specific knowledge baked in
-- Deterministic (same input → same output)
-- Fast (native execution)
+- Compiled KHANARY binary (.khμ file)
+- Domain-specific knowledge encoded as glyphs
+- Stack-based KNU program
+- Deterministic execution (same input → same output)
 - Stateless (no persistence between calls)
 
 **Example: Python Expert**
