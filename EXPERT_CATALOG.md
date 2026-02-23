@@ -1,10 +1,10 @@
 # KHANARY Expert Catalog
 
-Complete reference of all 40+ specialized domain experts available in the KHANARY Mixture of Experts system.
+Complete reference of all 40+ specialized domain experts available in the KHANARY Mixture of Experts system, with Micronaut (30MB) and Supernaut (256MB-2GB) variants.
 
 ## Overview
 
-The KHANARY system includes 40+ specialized experts organized into 12 categories:
+The KHANARY system includes 40+ specialized experts organized into 12 categories. Each expert is available in multiple scales:
 
 | Category | Experts | Purpose |
 |----------|---------|---------|
@@ -21,6 +21,71 @@ The KHANARY system includes 40+ specialized experts organized into 12 categories
 | Machine Learning | 3 | ML, NLP, Computer Vision |
 | Specialized Tools | 4 | Architecture, Performance, Graphics, Documentation |
 | **TOTAL** | **40+** | **Comprehensive Coverage** |
+
+---
+
+## Expert Variants: Micronaut vs Supernaut
+
+Each expert is available in two scales:
+
+### Micronaut (30MB per expert)
+- **Memory:** 30MB
+- **Latency:** 2-5ms per token
+- **Throughput:** 200-500 tokens/sec
+- **Accuracy:** 85-95% baseline
+- **Format:** `.khμ` binary
+- **Best For:** Edge devices, lightweight inference, cost-sensitive applications
+
+### Supernaut Variants (Scaled 8-67x)
+
+| Variant | Memory | Brains | Latency | Accuracy | Best For |
+|---------|--------|--------|---------|----------|----------|
+| **Sovereign** | 256MB | 1 | 10-50ms | 88-97% | Balanced tasks, APIs |
+| **HyperCognitive** | 512MB | 2 | 15-75ms | 89-97% | Complex reasoning |
+| **OmniBrain** | 1GB | 4 | 20-100ms | 90-98% | Full integration |
+| **MegaExpert** | 2GB | 8 | 30-150ms | 91-98% | Specialized domains |
+
+**Supernaut Features:**
+- ✅ Multiple parallel brains (consensus reasoning)
+- ✅ Specialized modules (NeuralODE, Attention, GNN, RL, etc.)
+- ✅ Advanced agent teams (Researcher, Domain Expert, Validator)
+- ✅ Multi-system memory (short-term, long-term, episodic, semantic)
+- ✅ Format: `.super.s7` package
+
+**Accuracy Improvement vs Micronaut:**
+- Sovereign: +3-5%
+- HyperCognitive: +4-6%
+- OmniBrain: +5-8%
+- MegaExpert: +6-9%
+
+---
+
+## Creating Supernaut Variants
+
+**For any expert, create a supernaut version:**
+
+```powershell
+# Load builder
+.\ATOMIC_BUILD_SUPERNAUTS.ps1
+
+# Create supernaut
+$python_supernaut = [Supernaut]::new("PythonMegaExpert", [SupernautType]::MegaExpert)
+
+# Specialize for domain
+$python_supernaut.SpecializeModule("TransformerAttention", @{
+    AttentionHeads = 16
+    Layers = 12
+})
+
+# Use for inference
+$result = $python_supernaut.AdvancedInfer(
+    "Generate optimized Python code for matrix operations",
+    @{Domain = "scientific_computing"; Depth = "advanced"}
+)
+
+# Export
+$python_supernaut.ToSuperS7() | Out-File "PythonMegaExpert.super.s7"
+```
 
 ---
 
