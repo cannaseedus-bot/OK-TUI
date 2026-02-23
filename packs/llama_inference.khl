@@ -1,0 +1,206 @@
+⟁Pop⟁ llama_inference_manifest {
+  "name": "llama_inference",
+  "version": "1.0.0",
+  "description": "Llama Full Inference Pipeline in K'UHUL",
+  "author": "K'UHUL Contributors",
+  "license": "MIT"
+}
+
+⟁Xul⟁ llama_inference
+  ⟁Pop⟁ model_config {
+    "vocab_size": 32000,
+    "hidden_size": 4096,
+    "intermediate_size": 11008,
+    "num_layers": 32,
+    "num_heads": 32,
+    "head_dim": 128,
+    "max_seq_len": 4096,
+    "rope_theta": 10000.0
+  }
+
+  ⟁Pop⟁ inference_config {
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 40,
+    "max_tokens": 2048
+  }
+
+  ⟁Pop⟁ generate(prompt, config) ⟁Xul⟁
+    ⟁Wo⟁ tokenizer = @load_pack("llama_tokenizer")
+    ⟁Wo⟁ attention = @load_pack("llama_attention")
+    ⟁Wo⟁ ffn = @load_pack("llama_ffn")
+
+    ⟁Wo⟁ tokens = tokenizer.encode(prompt)
+
+    ⟁Wo⟁ bos_token = 1
+    ⟁Wo⟁ eos_token = 2
+
+    ⟁Wo⟁ token_ids = [@concat([bos_token], tokens)]
+
+    ⟁Wo⟁ generated = []
+
+    ⟁K'ayab⟁ i from 0 to config["max_tokens"]
+      ⟁Wo⟁ next_token = @forward_pass(token_ids, attention, ffn)
+
+      ⟁Wo⟁ generated = @concat(generated, [next_token])
+
+      ⟁Wo⟁ token_ids = @concat(token_ids, [next_token])
+
+      ⟁Sek⟁ next_token == eos_token
+        @break
+      ⟁Xul⟁
+    ⟁Kumk'u⟁
+
+    ⟁Wo⟁ output_text = tokenizer.decode(generated)
+
+    ⟁Ch'en⟁ output_text
+  ⟁Xul⟁
+
+  ⟁Pop⟁ forward_pass(token_ids, attention, ffn) ⟁Xul⟁
+    ⟁Wo⟁ embed_layer = @get_weight("embed")
+    ⟁Wo⟁ config = model_config
+
+    ⟁Wo⟁ x = @embedding_lookup(token_ids, embed_layer)
+
+    ⟁K'ayab⟁ layer_idx from 0 to config["num_layers"]
+      ⟁Wo⟁ attn_out = attention.forward(x, null)
+
+      ⟁Wo⟁ x = @layer_norm(@add(x, attn_out))
+
+      ⟁Wo⟁ ffn_out = ffn.forward(x)
+
+      ⟁Wo⟁ x = @layer_norm(@add(x, ffn_out))
+    ⟁Kumk'u⟁
+
+    ⟁Wo⟁ x = @layer_norm(x)
+
+    ⟁Wo⟁ lm_head = @get_weight("lm_head")
+    ⟁Wo⟁ logits = @matmul(x, lm_head)
+
+    ⟁Wo⟁ next_token = @sample_token(logits, config)
+
+    ⟁Ch'en⟁ next_token
+  ⟁Xul⟁
+
+  ⟁Pop⟁ sample_token(logits, config) ⟁Xul⟁
+    ⟁Wo⟁ temperature = config["temperature"]
+    ⟁Wo⟁ top_p = config["top_p"]
+    ⟁Wo⟁ top_k = config["top_k"]
+
+    ⟁Wo⟁ last_logits = @last_row(logits)
+
+    ⟁Sek⟁ temperature > 0.0
+      ⟁Wo⟁ last_logits = @divide(last_logits, temperature)
+    ⟁Xul⟁
+
+    ⟁Wo⟁ probs = @softmax(last_logits)
+
+    ⟁Sek⟁ top_k > 0
+      ⟁Wo⟁ probs = @top_k_filter(probs, top_k)
+    ⟁Xul⟁
+
+    ⟁Sek⟁ top_p > 0.0 && top_p < 1.0
+      ⟁Wo⟁ probs = @top_p_filter(probs, top_p)
+    ⟁Xul⟁
+
+    ⟁Wo⟁ token = @sample_from_distribution(probs)
+
+    ⟁Ch'en⟁ token
+  ⟁Xul⟁
+
+  ⟁Pop⟁ embedding_lookup(token_ids, embed_layer) ⟁Xul⟁
+    ⟁Wo⟁ embeddings = []
+
+    ⟁K'ayab⟁ i from 0 to @length(token_ids)
+      ⟁Wo⟁ token_id = token_ids[i]
+      ⟁Wo⟁ embedding = embed_layer[token_id]
+      ⟁Wo⟁ embeddings = @concat(embeddings, [embedding])
+    ⟁Kumk'u⟁
+
+    ⟁Wo⟁ result = @reshape(embeddings, [-1, model_config["hidden_size"]])
+
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ layer_norm(x, eps) ⟁Xul⟁
+    ⟁Wo⟁ eps = eps || 1e-5
+
+    ⟁Wo⟁ mean = @mean(x, @last_axis())
+    ⟁Wo⟁ variance = @variance(x, @last_axis())
+
+    ⟁Wo⟁ normalized = @divide(
+      @subtract(x, mean),
+      @sqrt(@add(variance, eps))
+    )
+
+    ⟁Ch'en⟁ normalized
+  ⟁Xul⟁
+
+  ⟁Pop⟁ top_k_filter(probs, k) ⟁Xul⟁
+    ⟁Wo⟁ top_k_probs = @top_k(probs, k)
+
+    ⟁Wo⟁ min_prob = @min(top_k_probs)
+
+    ⟁Wo⟁ filtered = @where(probs >= min_prob, probs, 0.0)
+
+    ⟁Wo⟁ filtered = @divide(filtered, @sum(filtered))
+
+    ⟁Ch'en⟁ filtered
+  ⟁Xul⟁
+
+  ⟁Pop⟁ top_p_filter(probs, p) ⟁Xul⟁
+    ⟁Wo⟁ sorted_probs = @sort(probs, @descending())
+
+    ⟁Wo⟁ cumsum_probs = @cumsum(sorted_probs)
+
+    ⟁Wo⟁ cutoff_idx = @where(cumsum_probs <= p)[@last()]
+
+    ⟁Wo⟁ cutoff_prob = sorted_probs[cutoff_idx]
+
+    ⟁Wo⟁ filtered = @where(probs >= cutoff_prob, probs, 0.0)
+
+    ⟁Wo⟁ filtered = @divide(filtered, @sum(filtered))
+
+    ⟁Ch'en⟁ filtered
+  ⟁Xul⟁
+⟁Xul⟁
+
+C@@L HANDLER llama.inference
+  ⟁Pop⟁ inference_handler {
+    "params": {
+      "prompt": "string",
+      "temperature": "float",
+      "top_p": "float",
+      "max_tokens": "int"
+    },
+    "returns": {
+      "output": "string",
+      "tokens": "array[int]",
+      "fingerprint": "string"
+    }
+  }
+
+  ⟁Wo⟁ prompt = @get_param("prompt")
+  ⟁Wo⟁ config = llama_inference.inference_config
+
+  ⟁Sek⟁ @get_param("temperature") != null
+    ⟁Wo⟁ config["temperature"] = @get_param("temperature")
+  ⟁Xul⟁
+
+  ⟁Sek⟁ @get_param("top_p") != null
+    ⟁Wo⟁ config["top_p"] = @get_param("top_p")
+  ⟁Xul⟁
+
+  ⟁Sek⟁ @get_param("max_tokens") != null
+    ⟁Wo⟁ config["max_tokens"] = @get_param("max_tokens")
+  ⟁Xul⟁
+
+  ⟁Wo⟁ output = llama_inference.generate(prompt, config)
+
+  ⟁Wo⟁ fingerprint = @scxq2_fingerprint(output)
+
+  ⟁Ch'en⟁ {
+    "output": output,
+    "fingerprint": fingerprint
+  }
+C@@L END

@@ -3,6 +3,8 @@ package runtime
 import (
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -68,6 +70,43 @@ var Builtins = map[string]BuiltinFunc{
 	"range":  builtinRange,
 	"keys":   builtinKeys,
 	"values": builtinValues,
+
+	// System functions (Windows/Unix compatible)
+	"sys.os":           builtinSysOS,
+	"sys.env_get":      builtinSysEnvGet,
+	"sys.env_set":      builtinSysEnvSet,
+	"sys.env_home":     builtinSysEnvHome,
+	"sys.env_appdata":  builtinSysEnvAppdata,
+	"sys.cwd":          builtinSysCwd,
+	"sys.chdir":        builtinSysChdir,
+	"sys.path_join":    builtinSysPathJoin,
+	"sys.path_sep":     builtinSysPathSep,
+	"sys.is_absolute":  builtinSysIsAbsolute,
+	"sys.expand_path":  builtinSysExpandPath,
+	"sys.readfile":     builtinSysReadFile,
+	"sys.writefile":    builtinSysWriteFile,
+	"sys.listdir":      builtinSysListDir,
+	"sys.remove":       builtinSysRemove,
+
+	// Process functions (Windows/Unix compatible)
+	"sys.proc_run":     builtinSysProcRun,
+	"sys.proc_shell":   builtinSysProcShell,
+	"sys.proc_exists":  builtinSysProcExists,
+	"sys.proc_list":    builtinSysProcList,
+	"sys.proc_kill":    builtinSysProcKill,
+
+	// Registry functions (Windows-only, stubs on Unix)
+	"sys.registry_get":      builtinSysRegistryGet,
+	"sys.registry_set":      builtinSysRegistrySet,
+	"sys.registry_list":     builtinSysRegistryList,
+	"sys.registry_delete":   builtinSysRegistryDelete,
+	"sys.registry_subkeys":  builtinSysRegistrySubkeys,
+
+	// Network functions (Windows/Unix compatible)
+	"sys.port_available":     builtinSysPortAvailable,
+	"sys.discover_services":  builtinSysDiscoverServices,
+	"sys.local_ip":           builtinSysLocalIP,
+	"sys.wait_for_port":      builtinSysWaitForPort,
 }
 
 // Math builtins
@@ -689,6 +728,299 @@ func builtinValues(args ...interface{}) interface{} {
 	return []interface{}{}
 }
 
+// System builtins (Windows/Unix compatible)
+
+func builtinSysOS(args ...interface{}) interface{} {
+	// Returns OS type: "windows", "linux", "darwin", etc.
+	return os.Getenv("GOOS")
+}
+
+func builtinSysEnvGet(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return nil
+	}
+	name := toString(args[0])
+	value, ok := os.LookupEnv(name)
+	if !ok {
+		return nil
+	}
+	return value
+}
+
+func builtinSysEnvSet(args ...interface{}) interface{} {
+	if len(args) < 2 {
+		return false
+	}
+	name := toString(args[0])
+	value := toString(args[1])
+	err := os.Setenv(name, value)
+	return err == nil
+}
+
+func builtinSysEnvHome(args ...interface{}) interface{} {
+	return GetHomeDir()
+}
+
+func builtinSysEnvAppdata(args ...interface{}) interface{} {
+	return GetAppDataDir()
+}
+
+func builtinSysCwd(args ...interface{}) interface{} {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil
+	}
+	return pwd
+}
+
+func builtinSysChdir(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	path := toString(args[0])
+	err := os.Chdir(path)
+	return err == nil
+}
+
+func builtinSysPathJoin(args ...interface{}) interface{} {
+	if len(args) == 0 {
+		return ""
+	}
+	parts := make([]string, len(args))
+	for i, arg := range args {
+		parts[i] = toString(arg)
+	}
+	return JoinPath(parts...)
+}
+
+func builtinSysPathSep(args ...interface{}) interface{} {
+	return PathSeparator()
+}
+
+func builtinSysIsAbsolute(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	path := toString(args[0])
+	return IsAbsolutePath(path)
+}
+
+func builtinSysExpandPath(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return ""
+	}
+	path := toString(args[0])
+	return ExpandPath(path)
+}
+
+func builtinSysReadFile(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return nil
+	}
+	filename := toString(args[0])
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil
+	}
+	return string(content)
+}
+
+func builtinSysWriteFile(args ...interface{}) interface{} {
+	if len(args) < 2 {
+		return false
+	}
+	filename := toString(args[0])
+	content := toString(args[1])
+	err := os.WriteFile(filename, []byte(content), 0644)
+	return err == nil
+}
+
+func builtinSysListDir(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return nil
+	}
+	path := toString(args[0])
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil
+	}
+
+	result := make([]interface{}, len(entries))
+	for i, entry := range entries {
+		info := map[string]interface{}{
+			"name":     entry.Name(),
+			"is_dir":   entry.IsDir(),
+			"path":     filepath.Join(path, entry.Name()),
+		}
+		result[i] = info
+	}
+	return result
+}
+
+func builtinSysRemove(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	path := toString(args[0])
+	err := os.Remove(path)
+	return err == nil
+}
+
+// Process builtins (Windows/Unix compatible)
+
+func builtinSysProcRun(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return nil
+	}
+
+	cmd := toString(args[0])
+	cmdArgs := []string{}
+
+	// Collect remaining args as command arguments
+	if len(args) > 1 {
+		if arr, ok := args[1].([]interface{}); ok {
+			for _, a := range arr {
+				cmdArgs = append(cmdArgs, toString(a))
+			}
+		}
+	}
+
+	result := RunCommand(cmd, cmdArgs)
+	return map[string]interface{}{
+		"exit_code": result.ExitCode,
+		"stdout":    result.Stdout,
+		"stderr":    result.Stderr,
+	}
+}
+
+func builtinSysProcShell(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return nil
+	}
+
+	cmdLine := toString(args[0])
+	result := ShellCommand(cmdLine)
+
+	return map[string]interface{}{
+		"exit_code": result.ExitCode,
+		"stdout":    result.Stdout,
+		"stderr":    result.Stderr,
+	}
+}
+
+func builtinSysProcExists(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+
+	cmd := toString(args[0])
+	return CommandExists(cmd)
+}
+
+func builtinSysProcList(args ...interface{}) interface{} {
+	processes := ListProcesses()
+	result := make([]interface{}, len(processes))
+
+	for i, p := range processes {
+		result[i] = map[string]interface{}{
+			"pid":  p.PID,
+			"name": p.Name,
+		}
+	}
+
+	return result
+}
+
+func builtinSysProcKill(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+
+	pid := int(toFloat(args[0]))
+	err := TerminateProcess(pid)
+	return err == nil
+}
+
+// Registry builtins (Windows-only, stubs on Unix)
+
+func builtinSysRegistryGet(args ...interface{}) interface{} {
+	if len(args) < 3 {
+		return nil
+	}
+
+	hive := toString(args[0])
+	key := toString(args[1])
+	valueName := toString(args[2])
+
+	return RegistryGet(hive, key, valueName)
+}
+
+func builtinSysRegistrySet(args ...interface{}) interface{} {
+	if len(args) < 4 {
+		return false
+	}
+
+	hive := toString(args[0])
+	key := toString(args[1])
+	valueName := toString(args[2])
+	value := args[3]
+
+	err := RegistrySet(hive, key, valueName, value)
+	return err == nil
+}
+
+func builtinSysRegistryList(args ...interface{}) interface{} {
+	if len(args) < 2 {
+		return nil
+	}
+
+	hive := toString(args[0])
+	key := toString(args[1])
+
+	values := RegistryList(hive, key)
+	result := make([]interface{}, len(values))
+
+	for i, v := range values {
+		result[i] = map[string]interface{}{
+			"name":  v.Key,
+			"value": v.Value,
+		}
+	}
+
+	return result
+}
+
+func builtinSysRegistryDelete(args ...interface{}) interface{} {
+	if len(args) < 3 {
+		return false
+	}
+
+	hive := toString(args[0])
+	key := toString(args[1])
+	valueName := toString(args[2])
+
+	err := RegistryDelete(hive, key, valueName)
+	return err == nil
+}
+
+func builtinSysRegistrySubkeys(args ...interface{}) interface{} {
+	if len(args) < 2 {
+		return nil
+	}
+
+	hive := toString(args[0])
+	key := toString(args[1])
+
+	subkeys := RegistryListSubkeys(hive, key)
+	result := make([]interface{}, len(subkeys))
+
+	for i, sk := range subkeys {
+		result[i] = sk
+	}
+
+	return result
+}
+
 // Helper functions
 
 func toFloat(v interface{}) float64 {
@@ -738,4 +1070,40 @@ func toBool(v interface{}) bool {
 	default:
 		return true
 	}
+}
+
+// Network builtins
+
+func builtinSysPortAvailable(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	port := int(toFloat(args[0]))
+	return PortAvailable(port)
+}
+
+func builtinSysDiscoverServices(args ...interface{}) interface{} {
+	discovery := DiscoverServices()
+	return map[string]interface{}{
+		"ollama":       discovery.Ollama,
+		"orchestrator": discovery.Orchestrator,
+	}
+}
+
+func builtinSysLocalIP(args ...interface{}) interface{} {
+	return GetLocalIPAddress()
+}
+
+func builtinSysWaitForPort(args ...interface{}) interface{} {
+	if len(args) < 1 {
+		return false
+	}
+	port := int(toFloat(args[0]))
+	maxWait := 30 // Default 30 seconds
+
+	if len(args) > 1 {
+		maxWait = int(toFloat(args[1]))
+	}
+
+	return WaitForPort(port, maxWait)
 }

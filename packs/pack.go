@@ -13,9 +13,14 @@
 package packs
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"net/url"
 	"sync"
+	"time"
 
+	"github.com/ollama/ollama/api"
 	"github.com/ollama/ollama/api/xjson"
 	"github.com/ollama/ollama/kuhul/runtime"
 	"github.com/ollama/ollama/kuhul/scxq2"
@@ -156,12 +161,24 @@ func (r *Registry) InitAll(state *runtime.RuntimeState) error {
 type LamOPack struct {
 	state    *runtime.RuntimeState
 	endpoint string
+	client   *api.Client
+	baseURL  *url.URL
 }
 
 // NewLamOPack creates a new lam.o pack
 func NewLamOPack() *LamOPack {
+	// Initialize with default endpoint
+	baseURL, _ := url.Parse("http://localhost:11434")
+
+	// Create HTTP client with timeout
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
 	return &LamOPack{
 		endpoint: "http://localhost:11434",
+		baseURL:  baseURL,
+		client:   api.NewClient(baseURL, httpClient),
 	}
 }
 
@@ -171,6 +188,33 @@ func (p *LamOPack) Description() string { return "Llama/Ollama model runner pack
 
 func (p *LamOPack) Init(state *runtime.RuntimeState) error {
 	p.state = state
+
+	// Initialize Ollama API client
+	// Use the default endpoint or from runtime state if available
+	endpoint, ok := state.Variables.Get("@lam_o_endpoint")
+	if ok {
+		if endpointStr, isStr := endpoint.(string); isStr {
+			p.endpoint = endpointStr
+			baseURL, err := url.Parse(endpointStr)
+			if err == nil {
+				p.baseURL = baseURL
+				// Create HTTP client with timeout
+				httpClient := &http.Client{
+					Timeout: 30 * time.Second,
+				}
+				p.client = api.NewClient(baseURL, httpClient)
+			}
+		}
+	}
+
+	// Ensure client is initialized
+	if p.client == nil {
+		httpClient := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+		p.client = api.NewClient(p.baseURL, httpClient)
+	}
+
 	return nil
 }
 
@@ -197,18 +241,72 @@ func (p *LamOPack) Variables() map[string]interface{} {
 }
 
 func (p *LamOPack) handleInfer(ctx *runtime.Context) (interface{}, error) {
-	// Create XJSON request from context
-	req := xjson.CreateInferRequest(ctx.Body)
-	if err := req.Validate(); err != nil {
-		return xjson.NewErrorResponse("lam.o", err.Error(), 400), nil
+	// Extract parameters from context
+	model, _ := ctx.Body["model"].(string)
+	prompt, _ := ctx.Body["prompt"].(string)
+
+	if model == "" {
+		return xjson.NewErrorResponse("lam.o", "model parameter required", 400), nil
+	}
+	if prompt == "" {
+		return xjson.NewErrorResponse("lam.o", "prompt parameter required", 400), nil
 	}
 
-	// TODO: Actual Ollama API call
-	// For now, return a mock response
-	resp := xjson.NewCompletionResponse(req.Model, "lam.o", "[Mock response from "+req.Model+"]")
-	resp.WithTokens(len(req.Prompt)/4, 50)
+	// If no client available, return error
+	if p.client == nil {
+		return xjson.NewErrorResponse("lam.o", "Ollama client not initialized. Ensure Ollama is running at "+p.endpoint, 503), nil
+	}
 
-	return resp, nil
+	// Prepare generation request
+	temperature, _ := ctx.Body["temperature"].(float64)
+	if temperature == 0 {
+		temperature = 0.7
+	}
+
+	topP, _ := ctx.Body["top_p"].(float64)
+	if topP == 0 {
+		topP = 0.9
+	}
+
+	stream := false // Collect full response
+	genReq := &api.GenerateRequest{
+		Model:   model,
+		Prompt:  prompt,
+		Stream:  &stream,
+		Options: map[string]any{
+			"temperature": temperature,
+			"top_p":       topP,
+		},
+	}
+
+	// Call Ollama API
+	var response string
+	var promptTokens int
+	var completionTokens int
+
+	callCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err := p.client.Generate(callCtx, genReq, func(resp api.GenerateResponse) error {
+		response = resp.Response
+		promptTokens = resp.PromptEvalCount
+		completionTokens = resp.EvalCount
+		return nil
+	})
+
+	if err != nil {
+		return xjson.NewErrorResponse("lam.o", fmt.Sprintf("Ollama API error: %v", err), 503), nil
+	}
+
+	// Return success response
+	return map[string]interface{}{
+		"ok":                true,
+		"model":             model,
+		"response":          response,
+		"prompt_tokens":     promptTokens,
+		"completion_tokens": completionTokens,
+		"total_tokens":      promptTokens + completionTokens,
+	}, nil
 }
 
 func (p *LamOPack) handleChat(ctx *runtime.Context) (interface{}, error) {
@@ -222,14 +320,41 @@ func (p *LamOPack) handleGenerate(ctx *runtime.Context) (interface{}, error) {
 func (p *LamOPack) handleEmbed(ctx *runtime.Context) (interface{}, error) {
 	text, _ := ctx.Body["text"].(string)
 	model, _ := ctx.Body["model"].(string)
+
+	if text == "" {
+		return xjson.NewErrorResponse("lam.o", "text parameter required", 400), nil
+	}
+
 	if model == "" {
 		model = "nomic-embed-text"
 	}
 
-	// Mock embedding
-	embedding := make([]float64, 384)
-	for i := range embedding {
-		embedding[i] = float64(i) * 0.001
+	// If no client available, return error
+	if p.client == nil {
+		return xjson.NewErrorResponse("lam.o", "Ollama client not initialized. Ensure Ollama is running at "+p.endpoint, 503), nil
+	}
+
+	// Call Ollama Embed API
+	embedReq := &api.EmbedRequest{
+		Model: model,
+		Input: text,
+	}
+
+	callCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	embedResp, err := p.client.Embed(callCtx, embedReq)
+	if err != nil {
+		return xjson.NewErrorResponse("lam.o", fmt.Sprintf("Ollama embed error: %v", err), 503), nil
+	}
+
+	// Convert float32 embeddings to float64 for JSON compatibility
+	var embedding []float64
+	if len(embedResp.Embeddings) > 0 {
+		embedding = make([]float64, len(embedResp.Embeddings[0]))
+		for i, v := range embedResp.Embeddings[0] {
+			embedding[i] = float64(v)
+		}
 	}
 
 	return map[string]interface{}{
@@ -241,27 +366,68 @@ func (p *LamOPack) handleEmbed(ctx *runtime.Context) (interface{}, error) {
 }
 
 func (p *LamOPack) handleListModels(ctx *runtime.Context) (interface{}, error) {
-	// Mock model list
+	// If no client available, return error
+	if p.client == nil {
+		return xjson.NewErrorResponse("lam.o", "Ollama client not initialized. Ensure Ollama is running at "+p.endpoint, 503), nil
+	}
+
+	// Call Ollama List API
+	callCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	listResp, err := p.client.List(callCtx)
+	if err != nil {
+		return xjson.NewErrorResponse("lam.o", fmt.Sprintf("Ollama list error: %v", err), 503), nil
+	}
+
+	// Convert models to response format
+	models := make([]map[string]interface{}, 0)
+	for _, m := range listResp.Models {
+		models = append(models, map[string]interface{}{
+			"name":              m.Name,
+			"model":             m.Model,
+			"modified_at":       m.ModifiedAt,
+			"size":              m.Size,
+			"digest":            m.Digest,
+			"details":           m.Details,
+		})
+	}
+
 	return map[string]interface{}{
-		"ok": true,
-		"models": []map[string]interface{}{
-			{"name": "llama3.2", "size": "4.7GB"},
-			{"name": "deepseek-r1", "size": "8.4GB"},
-			{"name": "qwen2.5-coder", "size": "4.9GB"},
-		},
+		"ok":     true,
+		"models": models,
+		"count":  len(models),
 	}, nil
 }
 
 func (p *LamOPack) handleShowModel(ctx *runtime.Context) (interface{}, error) {
 	model, _ := ctx.Body["model"].(string)
+
+	if model == "" {
+		return xjson.NewErrorResponse("lam.o", "model parameter required", 400), nil
+	}
+
+	// If no client available, return error
+	if p.client == nil {
+		return xjson.NewErrorResponse("lam.o", "Ollama client not initialized. Ensure Ollama is running at "+p.endpoint, 503), nil
+	}
+
+	// Call Ollama Show API
+	callCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	showResp, err := p.client.Show(callCtx, &api.ShowRequest{Name: model})
+	if err != nil {
+		return xjson.NewErrorResponse("lam.o", fmt.Sprintf("Ollama show error: %v", err), 503), nil
+	}
+
 	return map[string]interface{}{
-		"ok":    true,
-		"model": model,
-		"info": map[string]interface{}{
-			"parameters": "7B",
-			"quantization": "Q4_K_M",
-			"format": "gguf",
-		},
+		"ok":       true,
+		"model":    model,
+		"details":  showResp.Details,
+		"modelfile": showResp.Modelfile,
+		"parameters": showResp.Parameters,
+		"template":  showResp.Template,
 	}, nil
 }
 
@@ -418,7 +584,7 @@ func (p *ASXRAMPack) handleSet(ctx *runtime.Context) (interface{}, error) {
 
 func (p *ASXRAMPack) handleDelete(ctx *runtime.Context) (interface{}, error) {
 	key, _ := ctx.Body["key"].(string)
-	p.state.SetASXRAM(key, nil)
+	p.state.DeleteASXRAM(key)
 	return map[string]interface{}{
 		"ok":  true,
 		"key": key,

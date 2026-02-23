@@ -365,15 +365,55 @@ Examples:
       const elements = {};
 
       // Initialize application
-      function init() {
+      async function init() {
         cacheDOMElements();
         bindEventListeners();
         registerServiceWorker();
+        await discoverServices(); // Discover backend services from bridge
         checkRunnerHealth();
         loadModels();
         loadHistory();
         setupInstallPrompt();
         updateXJSONPreview();
+      }
+
+      // Discover services from the bridge endpoint
+      async function discoverServices() {
+        try {
+          const response = await fetch('/api/services/discover');
+          if (!response.ok) {
+            console.warn('[K\'uhul] Service discovery failed:', response.status);
+            return;
+          }
+
+          const discovery = await response.json();
+
+          // Configure KuhulClient with discovered URLs
+          if (discovery.ollama_url && discovery.orchestrator_url) {
+            console.log('[K\'uhul] Discovered services:', {
+              ollama: discovery.ollama_url,
+              orchestrator: discovery.orchestrator_url
+            });
+
+            window.KuhulClient.configure({
+              ollamaUrl: discovery.ollama_url + '/api/generate',
+              orchestratorUrl: discovery.orchestrator_url + '/api/infer',
+              ollamaTagsUrl: discovery.ollama_url + '/api/tags',
+              healthUrl: discovery.orchestrator_url + '/api/health'
+            });
+
+            // Update settings UI
+            const orchestratorInput = document.getElementById('orchestrator-url');
+            const ollamaInput = document.getElementById('ollama-url');
+            if (orchestratorInput) orchestratorInput.value = discovery.orchestrator_url + '/api/infer';
+            if (ollamaInput) ollamaInput.value = discovery.ollama_url + '/api/generate';
+          } else {
+            console.warn('[K\'uhul] Incomplete service discovery response');
+          }
+        } catch (error) {
+          console.warn('[K\'uhul] Service discovery error:', error);
+          // Fall back to defaults
+        }
       }
 
       // Cache DOM elements

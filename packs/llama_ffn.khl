@@ -1,0 +1,99 @@
+⟁Pop⟁ llama_ffn_manifest {
+  "name": "llama_ffn",
+  "version": "1.0.0",
+  "description": "Llama Feed-Forward Network in K'UHUL",
+  "author": "K'UHUL Contributors",
+  "license": "MIT"
+}
+
+⟁Xul⟁ llama_ffn
+  ⟁Pop⟁ ffn_config {
+    "hidden_size": 4096,
+    "intermediate_size": 11008,
+    "activation": "silu"
+  }
+
+  ⟁Pop⟁ forward(x) ⟁Xul⟁
+    ⟁Wo⟁ config = ffn_config
+    ⟁Wo⟁ seq_len = @shape(x)[0]
+
+    ⟁Sek⟁ seq_len == 0
+      ⟁Ch'en⟁ x
+    ⟁Xul⟁
+
+    ⟁Wo⟁ W1 = @get_weight("w1")
+    ⟁Wo⟁ W2 = @get_weight("w2")
+    ⟁Wo⟁ W3 = @get_weight("w3")
+
+    ⟁Wo⟁ h = @matmul(x, W1)
+
+    ⟁Sek⟁ config["activation"] == "silu" || config["activation"] == "swiglu"
+      ⟁Wo⟁ gate = @matmul(x, W3)
+      ⟁Wo⟁ h = @multiply(h, @silu(gate))
+    ⟁Xul⟁ @else
+      ⟁Wo⟁ h = @gelu(h)
+    ⟁Xul⟁
+
+    ⟁Wo⟁ output = @matmul(h, W2)
+
+    ⟁Ch'en⟁ output
+  ⟁Xul⟁
+
+  ⟁Pop⟁ silu(x) ⟁Xul⟁
+    ⟁Wo⟁ result = x * (1.0 / (1.0 + @exp(-x)))
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ gelu(x) ⟁Xul⟁
+    ⟁Wo⟁ sqrt_2_pi = @sqrt(2.0 / 3.14159265)
+    ⟁Wo⟁ inner = sqrt_2_pi * (x + 0.044715 * x * x * x)
+    ⟁Wo⟁ result = 0.5 * x * (1.0 + @tanh(inner))
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ relu(x) ⟁Xul⟁
+    ⟁Wo⟁ result = @max(x, 0.0)
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ relu6(x) ⟁Xul⟁
+    ⟁Wo⟁ result = @min(@max(x, 0.0), 6.0)
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ gate_linear_units(x, gate) ⟁Xul⟁
+    ⟁Wo⟁ result = @multiply(x, @sigmoid(gate))
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+
+  ⟁Pop⟁ swiglu(x, gate) ⟁Xul⟁
+    ⟁Wo⟁ silu_x = @silu(x)
+    ⟁Wo⟁ result = @multiply(silu_x, gate)
+    ⟁Ch'en⟁ result
+  ⟁Xul⟁
+⟁Xul⟁
+
+C@@L HANDLER llama.ffn
+  ⟁Pop⟁ ffn_handler {
+    "params": {
+      "hidden": "tensor",
+      "activation": "string"
+    },
+    "returns": {
+      "output": "tensor"
+    }
+  }
+
+  ⟁Wo⟁ hidden = @get_param("hidden")
+  ⟁Wo⟁ activation = @get_param("activation")
+
+  ⟁Sek⟁ activation == "swiglu"
+    ⟁Wo⟁ output = llama_ffn.forward(hidden)
+  ⟁Xul⟁ @else
+    ⟁Wo⟁ output = llama_ffn.forward(hidden)
+  ⟁Xul⟁
+
+  ⟁Ch'en⟁ {
+    "output": output
+  }
+C@@L END

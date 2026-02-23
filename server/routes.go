@@ -1539,6 +1539,12 @@ func (s *Server) GenerateRoutes(rc *ollama.Registry) (http.Handler, error) {
 	// SCXQ2 Fingerprinting
 	r.POST("/api/scxq2/fingerprint", s.FingerprintHandler)
 
+	// PWA Bridge (service discovery and proxy)
+	s.RegisterBridgeRoutes(r)
+	if err := s.InitBridge(); err != nil {
+		slog.Debug("failed to discover services on startup", "err", err)
+	}
+
 	if rc != nil {
 		// wrap old with new
 		rs := &registry.Local{
