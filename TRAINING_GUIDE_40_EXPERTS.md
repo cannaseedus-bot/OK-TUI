@@ -1,6 +1,28 @@
-# KHANARY Training Guide: 40+ Specialized Experts
+# KHANARY Training Guide: 40+ Specialized Experts + Supernaut Builder
 
-Complete guide for training, compiling, and deploying 40+ domain-specific KHANARY experts.
+Complete guide for training, compiling, and deploying 40+ domain-specific KHANARY experts using the **Atomic Micronaut Build System** and **Supernaut Scaling Architecture**.
+
+## Quick Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  KHANARY Expert Training & Building Architecture                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  MICRONAUTS (30MB each)  → SUPERNAUTS (256MB-2GB each)         │
+│  ├─ Compile                ├─ Sovereign (256MB)                │
+│  ├─ Compress               ├─ HyperCognitive (512MB)           │
+│  ├─ Package                ├─ OmniBrain (1GB)                  │
+│  └─ Test                   └─ MegaExpert (2GB)                 │
+│                                                                 │
+│  Build Output:                                                   │
+│  ├─ .m (MATRIX source)     ├─ Multiple brains                  │
+│  ├─ .s (SCXQ2 compressed)  ├─ Object servers                   │
+│  └─ .s7 (SCXQ7 package)    ├─ Specialized modules              │
+│                            └─ Multi-agent teams                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Quick Start
 
@@ -43,6 +65,31 @@ python scripts/train_all_experts.py \
 
 # Expected time: 30-45 minutes (with 2 parallel workers)
 # Output: 5 × .khμ files
+```
+
+### Option 4: Build with Supernaut Scaling (NEW!)
+
+```powershell
+# PowerShell: Build micronauts AND scale to supernauts
+.\ATOMIC_BUILD_SUPERNAUTS.ps1
+
+# Option A: Interactive mode
+Show-BuildSystem
+
+# Option B: Programmatic mode
+$builder = [MicronautBuilder]::new(".\build\")
+$builder.CompileMicronaut("PythonExpert", @{
+    Type = "Sovereign"
+    Nodes = 72
+    Capabilities = @("inference", "code_generation")
+})
+$builder.TestMicronaut("PythonExpert")
+$builder.PackageMicronaut("PythonExpert", ".\dist\")
+
+# Option C: Create supernauts directly
+$supernaut = [Supernaut]::new("MegaAnalyzer", [SupernautType]::Sovereign)
+# or
+$supernaut = [Supernaut]::new("OmniSystem", [SupernautType]::OmniBrain)
 ```
 
 ---
@@ -151,6 +198,158 @@ python scripts/train_all_experts.py --group domain_apps
 
 # Includes: healthcare, finance, legal, business, education
 # Covers: Real-world industry domains
+```
+
+---
+
+## Supernaut Builder System
+
+### What is Supernaut?
+
+**Supernauts** are scaled-up versions of micronauts (experts) with 8-67x more memory and advanced capabilities:
+
+| Tier | Memory | Brains | Servers | Best For |
+|------|--------|--------|---------|----------|
+| **Micronaut** | 30MB | 1 | 1 | Single tasks, lightweight inference |
+| **Sovereign** | 256MB | 1 | 1 | Medium domains, balanced tasks |
+| **HyperCognitive** | 512MB | 2 | 2 | Complex reasoning, multi-domain |
+| **OmniBrain** | 1GB | 4 | 4 | System integration, deep analysis |
+| **MegaExpert** | 2GB | 8 | 8 | Enterprise domains, specialized experts |
+
+### Key Supernaut Features
+
+```
+🧠 Multiple Brains (Parallel Reasoning):
+   ├─ Sovereign: 1 brain (sequential)
+   ├─ HyperCognitive: 2 brains (dual reasoning)
+   ├─ OmniBrain: 4 brains (multi-consensus)
+   └─ MegaExpert: 8 brains (full distributed)
+
+🔧 Specialized Modules:
+   ├─ NeuralODE (differential equations)
+   ├─ TransformerAttention (sequence modeling)
+   ├─ GraphNeuralNetwork (graph reasoning)
+   ├─ BayesianInference (probabilistic reasoning)
+   ├─ ReinforcementLearning (policy learning)
+   └─ CausalInference (causality analysis)
+
+🤖 Advanced Agent Teams:
+   ├─ Researcher Agent (literature search, synthesis)
+   ├─ Domain Expert Agent (specialized knowledge)
+   ├─ Validator Agent (quality assurance)
+   └─ Orchestrator Agent (task coordination)
+
+💾 Memory Systems:
+   ├─ Short-term: Recent context
+   ├─ Long-term: Persistent knowledge
+   ├─ Episodic: Event sequences
+   ├─ Semantic: Concepts & relationships
+   ├─ Procedure: Skills & processes
+   └─ Working: Active computation
+```
+
+### Supernaut Usage Examples
+
+**Example 1: Create a Sovereign Supernaut (256MB)**
+```powershell
+$analyzer = [Supernaut]::new("CodeAnalyzer", [SupernautType]::Sovereign)
+
+# Perform advanced inference
+$result = $analyzer.AdvancedInfer(
+    "Analyze code quality patterns",
+    @{Domain = "software"; Threshold = 0.85}
+)
+
+# Specialize for specific task
+$spec = $analyzer.SpecializeModule("TransformerAttention", @{
+    AttentionHeads = 8
+    Layers = 6
+})
+
+# Check health
+$health = $analyzer.CheckHealth()
+Write-Host "Status: $health"
+```
+
+**Example 2: Create OmniBrain (1GB, 4 brains)**
+```powershell
+$omni = [Supernaut]::new("ResearchAssistant", [SupernautType]::OmniBrain)
+
+# Query analysis with multi-brain consensus
+$research = $omni.AdvancedInfer(
+    "Literature survey on quantum computing",
+    @{Domain = "research"; Papers = 100; Depth = "comprehensive"}
+)
+
+# Inspect system state
+$state = $omni.Introspect()
+$state | Format-Table -AutoSize
+```
+
+**Example 3: Create MegaExpert (2GB, 8 brains)**
+```powershell
+$megadoc = [Supernaut]::new("MedicalExpertSystem", [SupernautType]::MegaExpert)
+
+# Specialize multiple modules
+$megadoc.SpecializeModule("BayesianInference", @{Prior = "Empirical"})
+$megadoc.SpecializeModule("NeuralODE", @{Solver = "LSODA"})
+$megadoc.SpecializeModule("GraphNeuralNetwork", @{MessagePassing = $true})
+
+# Export as SuperS7 package
+$s7 = $megadoc.ToSuperS7()
+$s7 | Out-File "MedicalExpert.super.s7"
+```
+
+### Atomic Build System
+
+The **MicronautBuilder** class provides a complete CI/CD pipeline:
+
+```powershell
+# 1. Create builder
+$builder = [MicronautBuilder]::new(".\build\")
+
+# 2. Compile micronauts
+$builder.CompileMicronaut("PythonExpert", @{
+    Type = "Sovereign"
+    Nodes = 72
+    Agents = @(
+        @{Name = "planner"; Role = "planning"}
+        @{Name = "coder"; Role = "code_generation"}
+    )
+    Capabilities = @("inference", "code_generation")
+})
+
+# 3. Run tests
+$builder.TestMicronaut("PythonExpert")
+# Tests: Initialization, Compression, FileGeneration, Integrity
+
+# 4. Package
+$builder.PackageMicronaut("PythonExpert", ".\dist\")
+
+# 5. Get report
+$report = $builder.GenerateBuildReport()
+# Shows: Build ID, compile time, compression ratio, test results, package size
+```
+
+**Output Formats:**
+- `.m` - MATRIX source format (human-readable)
+- `.s` - SCXQ2 compressed format (optimized storage)
+- `.s7` - SCXQ7 complete package (distribution format)
+- `.super.s7` - SuperS7 package (supernaut distribution)
+
+### Build System Metrics
+
+```powershell
+# Compression Metrics
+$builder.Metrics.CompressionRatio      # 10:1 to 20:1 typical
+
+# Performance Metrics
+$builder.Metrics.CompileTime           # Total compilation time (ms)
+$builder.Metrics.TestsPassed          # Passed test count
+$builder.Metrics.TestsFailed          # Failed test count
+
+# Output Size
+$builder.Metrics.PackageSize          # Total package size (bytes)
 ```
 
 ---
@@ -449,10 +648,16 @@ python scripts/compile_all_experts.py \
 
 ## Parallel Training Best Practices
 
-### Rule of Thumb
+### Rule of Thumb for Micronauts (Training)
 - 1 expert per 6-8GB GPU VRAM
 - 4 experts × 24GB GPU = 2-3 experts per GPU (recommended)
 - 8 workers × 24GB GPUs = ~20-24 parallel experts
+
+### Memory Requirements for Supernauts (Runtime)
+- **Sovereign (256MB)**: 1 GPU with 6GB VRAM
+- **HyperCognitive (512MB)**: 1 GPU with 8GB VRAM or 2 CPUs with 2GB RAM each
+- **OmniBrain (1GB)**: 1 GPU with 12GB VRAM or 4 CPUs with 256MB each
+- **MegaExpert (2GB)**: 1 GPU with 24GB VRAM or 8 CPUs with 256MB each
 
 ### Configuration for Different Hardware
 
@@ -656,6 +861,114 @@ gh release upload v3.0.0-full experts/*.khμ experts/registry.json
 
 ---
 
+## Supernaut Optimization & Tuning
+
+### Fine-Tuning Supernaut Parameters
+
+**Adjust Brain Cluster Size:**
+```powershell
+# For more reasoning depth
+$supernaut.BrainCluster.Add([TrigLattice]::new(360))
+
+# For parallel consensus
+$brainResults = $supernaut.BrainCluster | ForEach-Object {
+    $_.FirePath($intelligentPath)
+} | Select-Object -First 3  # Use best 3 out of N brains
+```
+
+**Specialize Modules for Domain:**
+```powershell
+# Medical domain
+$supernaut.SpecializeModule("BayesianInference", @{
+    Prior = "Empirical"
+    Confidence = 0.95
+})
+
+# Financial domain
+$supernaut.SpecializeModule("GraphNeuralNetwork", @{
+    MessagePassing = $true
+    EdgeWeighting = "importance"
+})
+
+# Scientific domain
+$supernaut.SpecializeModule("NeuralODE", @{
+    Solver = "LSODA"
+    ToleranceRTOL = 1e-7
+})
+```
+
+**Memory Management:**
+```powershell
+# Monitor memory usage
+$state = $supernaut.Introspect()
+$state.MemoryUsage
+
+# Clear old memories (keeps semantic knowledge)
+$supernaut.Memory.ShortTerm.Clear()
+$supernaut.Memory.Episodic = @{}
+```
+
+### Performance Tuning by Tier
+
+**Sovereign (256MB) - Balanced:**
+```powershell
+# Recommended for general-purpose tasks
+# - Single brain for consistent reasoning
+# - Balanced memory allocation
+# - Good for API endpoints and services
+```
+
+**HyperCognitive (512MB) - Complex Reasoning:**
+```powershell
+# Recommended for multi-step problems
+# - Two brains for consensus validation
+# - Specialized module support
+# - Good for research and analysis
+```
+
+**OmniBrain (1GB) - Full Integration:**
+```powershell
+# Recommended for system-level tasks
+# - Four brains for robust reasoning
+# - All specialized modules enabled
+# - Good for enterprise systems
+```
+
+**MegaExpert (2GB) - Maximum Capability:**
+```powershell
+# Recommended for specialized domains
+# - Eight brains for comprehensive analysis
+# - Full module specialization
+# - Good for critical domain expertise
+```
+
+### Export & Distribution
+
+**Export to SuperS7 Format:**
+```powershell
+$s7 = $supernaut.ToSuperS7()
+$s7 | Out-File "expert.super.s7"
+
+# Includes:
+# - Brain cluster metadata
+# - Object server configuration
+# - Specialized module definitions
+# - Agent team definitions
+# - Performance statistics
+```
+
+**Create Distribution Package:**
+```powershell
+$builder.PackageMicronaut("SupranautExpert", ".\dist\")
+
+# Generates:
+# - Manifest (metadata)
+# - .zip archive (all files)
+# - Checksums (verification)
+```
+
+---
+
 ## Storage & Cleanup
 
 ### Disk Usage Estimates
@@ -756,12 +1069,181 @@ Binary Size: 7-15MB per expert (fp16)
 
 ---
 
+---
+
+## Complete Build Reference
+
+### Build System Commands
+
+```powershell
+# ATOMIC MICRONAUT BUILD SYSTEM
+$builder = [MicronautBuilder]::new(".\build\", @{})
+$builder.CompileMicronaut("name", @{Type="Sovereign"; ...})
+$builder.TestMicronaut("name")
+$builder.PackageMicronaut("name", ".\dist\")
+$report = $builder.BuildReport()
+[string]$reportText = $builder.GenerateBuildReport()
+
+# SUPERNAUT CREATION (8x-67x more memory)
+$s = [Supernaut]::new("Name", [SupernautType]::Sovereign)      # 256MB
+$s = [Supernaut]::new("Name", [SupernautType]::HyperCognitive) # 512MB
+$s = [Supernaut]::new("Name", [SupernautType]::OmniBrain)      # 1GB
+$s = [Supernaut]::new("Name", [SupernautType]::MegaExpert)     # 2GB
+
+# SUPERNAUT OPERATIONS
+$result = $s.AdvancedInfer("query", @{context})
+$spec = $s.SpecializeModule("TransformerAttention", @{...})
+$state = $s.Introspect()
+$health = $s.CheckHealth()
+$s7 = $s.ToSuperS7()
+```
+
+### Specialized Module Reference
+
+```powershell
+# NeuralODE - Differential Equation Solving
+$s.SpecializeModule("NeuralODE", @{
+    Solver = "LSODA"          # Or: RK45, DOP853
+    ToleranceRTOL = 1e-7
+    ToleranceATOL = 1e-9
+})
+
+# TransformerAttention - Sequence Modeling
+$s.SpecializeModule("TransformerAttention", @{
+    AttentionHeads = 16       # Or: 8, 32, 64
+    Layers = 12               # Or: 6, 24, 48
+    DropoutRate = 0.1
+})
+
+# GraphNeuralNetwork - Graph Reasoning
+$s.SpecializeModule("GraphNeuralNetwork", @{
+    MessagePassing = $true
+    EdgeWeighting = "importance"  # Or: "attention", "uniform"
+    AggregationMethod = "mean"    # Or: "sum", "max"
+})
+
+# BayesianInference - Probabilistic Reasoning
+$s.SpecializeModule("BayesianInference", @{
+    Prior = "Empirical"       # Or: "Laplace", "Dirichlet"
+    Confidence = 0.95
+})
+
+# ReinforcementLearning - Policy Learning
+$s.SpecializeModule("ReinforcementLearning", @{
+    Algorithm = "PPO"         # Or: "A3C", "DQN", "DDPG"
+    LearningRate = 1e-4
+})
+
+# CausalInference - Causality Analysis
+$s.SpecializeModule("CausalInference", @{
+    Framework = "SCM"         # Structural Causal Model
+    EstimationMethod = "backdoor"
+})
+```
+
+### Build Output Formats
+
+```
+.m (MATRIX)
+├─ Human-readable source format
+├─ Contains: version, brain config, agents, capabilities, memory budget
+└─ Size: 5-20KB per expert
+
+.s (SCXQ2)
+├─ Compressed format
+├─ Compression ratio: 10:1 to 20:1
+└─ Size: 500B-2KB per expert
+
+.s7 (SCXQ7)
+├─ Complete packaged format
+├─ Contains: metadata, checksums, all sections
+└─ Size: 1KB-5KB per expert
+
+.super.s7 (SuperS7)
+├─ Supernaut package format
+├─ Contains: brain cluster, servers, modules, agents, statistics
+└─ Size: 10KB-50KB per supernaut
+```
+
+---
+
 ## Next Steps
 
-1. **Start with core training**: `build_MoE.bat`
-2. **Expand as needed**: `python scripts/train_all_experts.py --group <group>`
-3. **Deploy when ready**: `python scripts/create_expert_registry.py`
-4. **Monitor & optimize**: Check logs & validation reports
+**Beginner Path:**
+1. Run core training: `build_MoE.bat`
+2. Create micronauts: `.\ATOMIC_BUILD_SUPERNAUTS.ps1 -Mode Quick`
+3. Test locally: `Show-BuildSystem`
+4. Deploy: Upload to registry
 
-**Ready to train 40+ specialists!** 🚀
+**Advanced Path:**
+1. Train all 40+ experts: `python scripts/train_all_experts.py --group all --workers 8`
+2. Build supernauts: `$s = [Supernaut]::new("Expert", [SupernautType]::OmniBrain)`
+3. Specialize modules: `$s.SpecializeModule("TransformerAttention", @{...})`
+4. Distribute: Export `.super.s7` packages
+5. Monitor: Use introspection and health checks
+
+**Production Path:**
+1. Set up automated builds: GitHub Actions + `build_MoE.bat`
+2. Create expert registry: `create_expert_registry.py`
+3. Version all artifacts: `git tag v1.0.0`
+4. Publish release: `gh release create`
+5. Deploy to production: Package management system
+
+---
+
+## Comparison: Micronauts vs Supernauts
+
+```
+MICRONAUTS (30MB):
+✅ Fast inference (2-5ms)
+✅ Low memory footprint
+✅ Good for edge devices
+✅ Sequential reasoning
+✅ Single brain architecture
+
+SUPERNAUTS (256MB-2GB):
+✅ Advanced reasoning (5-20ms)
+✅ Multi-brain consensus
+✅ Specialized modules
+✅ Better accuracy (+3-8%)
+✅ Enterprise-grade
+✅ Distributed processing
+```
+
+---
+
+## Troubleshooting Supernaut Issues
+
+**Q: Supernaut using too much memory?**
+A: Reduce MemoryBudgetMB, use Sovereign instead of MegaExpert, disable unused modules
+
+**Q: Inference is slow?**
+A: Use Sovereign/HyperCognitive instead of OmniBrain/MegaExpert, reduce brain cluster size
+
+**Q: Health check shows alerts?**
+A: Clear short-term memory, reduce working memory load, enable garbage collection
+
+**Q: Module specialization failed?**
+A: Check module name (case-sensitive), verify parameters, use default fallback
+
+**Q: Can't export to SuperS7?**
+A: Ensure SCXQ7 tools are installed, check write permissions, verify package format
+
+---
+
+## Ready to Build Your Experts! 🚀
+
+**Choose your path:**
+- 🟢 Quick: `Show-BuildSystem` (5 minutes, interactive demo)
+- 🟡 Standard: `build_MoE.bat` (2-3 hours, core 5 experts)
+- 🔴 Complete: `python scripts/train_all_experts.py --group all --workers 8` (50+ hours, all 40+ experts)
+- 🟣 Super: `[Supernaut]::new("Expert", [SupernautType]::OmniBrain)` (Advanced features)
+
+**For support:**
+- Check `logs/` directory for detailed training logs
+- Review `validation_report.json` for quality metrics
+- Consult `EXPERT_CATALOG.md` for domain-specific guidance
+- See `BUILD_SYSTEM_GUIDE.md` for advanced configuration
+
+**Happy building!** 🦸
 

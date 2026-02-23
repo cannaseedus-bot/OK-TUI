@@ -1,15 +1,43 @@
-# KHANARY Build System Guide
+# KHANARY Build System Guide: Micronauts + Supernauts
 
-Complete end-to-end guide for building, compiling, and distributing KHANARY domain-specific experts.
+Complete end-to-end guide for building, compiling, and distributing KHANARY domain-specific experts using the **Atomic Micronaut Build System** with **Supernaut Scaling**.
 
 ## Overview
 
 The KHANARY build system consists of:
 
-1. **build_MoE.bat** - Windows orchestrator (5-phase pipeline)
-2. **5 Python Helper Scripts** - Individual task executors
-3. **GitHub Actions CI/CD** - Automated release pipeline
-4. **Distribution Channels** - Multiple mirrors for deployment
+1. **build_MoE.bat** - Windows batch orchestrator (5-phase pipeline)
+2. **ATOMIC_BUILD_SUPERNAUTS.ps1** - PowerShell Supernaut builder
+3. **5 Python Helper Scripts** - Individual task executors
+4. **GitHub Actions CI/CD** - Automated release pipeline
+5. **Distribution Channels** - Multiple mirrors for deployment
+
+### Build Modes
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  MICRONAUT BUILD (30MB per expert)                              │
+├─────────────────────────────────────────────────────────────────┤
+│ build_MoE.bat                                                    │
+│  ├─ Download: HuggingFace datasets (100+)                       │
+│  ├─ Train: Domain-specific experts (Qwen-7B base)              │
+│  ├─ Compile: Convert to KHANARY format (.khμ)                  │
+│  ├─ Validate: Determinism & checksums                          │
+│  └─ Output: .m, .s, .s7 files                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  SUPERNAUT BUILD (256MB-2GB per supernaut)                      │
+├─────────────────────────────────────────────────────────────────┤
+│ ATOMIC_BUILD_SUPERNAUTS.ps1                                      │
+│  ├─ MicronautBuilder: Compile, compress, test micronauts        │
+│  ├─ Supernaut Scaling: 8-67x memory expansion                   │
+│  ├─ Brain Cluster: Multiple parallel reasoning engines          │
+│  ├─ Specialized Modules: NeuralODE, Attention, GNN, RL, etc     │
+│  ├─ Agent Teams: Researcher, Domain Expert, Validator, etc      │
+│  └─ Output: .super.s7 packages with statistics                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ```
 Developer
@@ -113,6 +141,95 @@ git push origin v2.1.0
 # - Compiles experts
 # - Validates
 # - Creates release
+```
+
+---
+
+## Supernaut Build System (NEW!)
+
+### Building Supernauts with Atomic Builder
+
+**Supernauts** are scaled-up experts with 8-67x more memory and advanced capabilities. Build them using PowerShell:
+
+```powershell
+# Load Supernaut system
+.\ATOMIC_BUILD_SUPERNAUTS.ps1
+
+# Option 1: Interactive demo
+Show-BuildSystem
+
+# Option 2: Build specific supernaut
+$builder = [MicronautBuilder]::new(".\build\")
+$builder.CompileMicronaut("MyExpert", @{
+    Type = "Sovereign"
+    Nodes = 72
+    Agents = @(@{Name = "planner"; Role = "planning"})
+    Capabilities = @("inference", "reasoning")
+})
+$builder.TestMicronaut("MyExpert")
+$builder.PackageMicronaut("MyExpert", ".\dist\")
+
+# Option 3: Create supernaut directly
+$supernaut = [Supernaut]::new("MegaAnalyzer", [SupernautType]::Sovereign)
+$result = $supernaut.AdvancedInfer("Complex reasoning task", @{})
+$state = $supernaut.Introspect()
+```
+
+### Supernaut Types & Capabilities
+
+| Type | Memory | Brains | Best For |
+|------|--------|--------|----------|
+| **Sovereign** | 256MB | 1 | Balanced tasks, API services |
+| **HyperCognitive** | 512MB | 2 | Complex reasoning, research |
+| **OmniBrain** | 1GB | 4 | Enterprise integration |
+| **MegaExpert** | 2GB | 8 | Specialized domains |
+
+### Specialized Modules
+
+All supernauts support optional specialization:
+
+```powershell
+# Specialize for different domains
+$s.SpecializeModule("TransformerAttention", @{AttentionHeads=16; Layers=12})
+$s.SpecializeModule("NeuralODE", @{Solver="LSODA"})
+$s.SpecializeModule("GraphNeuralNetwork", @{MessagePassing=$true})
+$s.SpecializeModule("BayesianInference", @{Prior="Empirical"})
+$s.SpecializeModule("ReinforcementLearning", @{Algorithm="PPO"})
+$s.SpecializeModule("CausalInference", @{})
+```
+
+### Advanced Agent Teams
+
+Every supernaut includes specialized agents:
+
+- **Researcher Agent**: Literature search, synthesis, novelty detection
+- **Domain Expert Agent**: Deep knowledge, specialized reasoning, best practices
+- **Validator Agent**: Correctness checking, consistency validation, error detection
+- **Orchestrator Agent**: Task planning, resource allocation, priority management
+
+### Build Report & Metrics
+
+```powershell
+# Get detailed report
+$report = $builder.GenerateBuildReport()
+
+# Includes:
+# - Build ID & timestamp
+# - Artifact count
+# - Compilation time (ms)
+# - Compression ratio (10:1 to 20:1)
+# - Test results (pass/fail)
+# - Package size (MB)
+# - Success rate (%)
+```
+
+### Export Formats
+
+```
+.m (MATRIX)      - Human-readable source (5-20KB)
+.s (SCXQ2)       - Compressed format (500B-2KB)
+.s7 (SCXQ7)      - Complete package (1KB-5KB)
+.super.s7        - Supernaut package (10KB-50KB)
 ```
 
 ---

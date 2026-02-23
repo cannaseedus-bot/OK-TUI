@@ -76,26 +76,52 @@ Specialized:             Architecture, Performance, Graphics, Docs
 ## 📖 Documentation
 
 - **[QUICK_START.md](QUICK_START.md)** - Get started in 5 minutes
+- **[BUILD_SPECS.md](BUILD_SPECS.md)** - Complete build modes, hardware specs, architecture
+- **[TRAINING_GUIDE_40_EXPERTS.md](TRAINING_GUIDE_40_EXPERTS.md)** - Training 40+ experts + Supernauts
+- **[BUILD_SYSTEM_GUIDE.md](BUILD_SYSTEM_GUIDE.md)** - Micronaut & Supernaut builder systems
 - **[EXPERT_CATALOG.md](EXPERT_CATALOG.md)** - All 40+ experts detailed
-- **[TRAINING_GUIDE_40_EXPERTS.md](TRAINING_GUIDE_40_EXPERTS.md)** - Training & expansion
-- **[BUILD_SYSTEM_GUIDE.md](BUILD_SYSTEM_GUIDE.md)** - Build orchestration
 - **[KHANARY_BINARY_DISTRIBUTION.md](KHANARY_BINARY_DISTRIBUTION.md)** - Distribution strategy
 
-## 🚀 Expand to 40+ Experts
+## 🏗️ Build Modes: Choose Your Scale
 
-```bash
-# Download all datasets (120+)
-python scripts/download_datasets.py --expert all
-
-# Train specific group
-python scripts/train_all_experts.py --group ml_ai --workers 2 --parallel
-
-# Train all experts (50+ hours on 4 GPUs)
-python scripts/train_all_experts.py --group all --workers 4 --parallel
-
-# Compile to .khμ format
-python scripts/compile_all_experts.py --experts all --workers 4 --parallel
 ```
+🟢 DEMO (5 min)        → Interactive build demo
+🟡 QUICK (30 min)      → 3-5 core experts
+🟠 STANDARD (2-3 hrs)  → 5 core experts
+🔴 COMPLETE (50+ hrs)  → All 40+ experts
+🟣 SUPERNAUT (minutes) → Scale existing experts 8-67x
+```
+
+### Quick Start Building
+
+**Interactive Demo:**
+```powershell
+.\ATOMIC_BUILD_SUPERNAUTS.ps1
+Show-BuildSystem
+```
+
+**Standard Build (5 experts):**
+```bash
+build_MoE.bat
+# Output: 70MB, 5 experts, 2-3 hours
+```
+
+**Complete Build (40+ experts):**
+```bash
+python scripts/download_datasets.py --expert all
+python scripts/train_all_experts.py --group all --workers 4 --parallel
+python scripts/compile_all_experts.py --experts all --workers 4 --parallel
+# Output: 560MB, 40+ experts, 50+ hours
+```
+
+**Supernaut Scaling (8-67x memory):**
+```powershell
+$s = [Supernaut]::new("MegaAnalyzer", [SupernautType]::OmniBrain)
+$s.SpecializeModule("TransformerAttention", @{AttentionHeads=16})
+$s.Introspect()
+```
+
+See **[BUILD_SPECS.md](BUILD_SPECS.md)** for complete build modes and specifications.
 
 ## 🔄 Architecture
 
