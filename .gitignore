@@ -1,0 +1,56 @@
+# Git ignore for KHANARY project
+
+# Large training/data directories (NOT for distribution)
+datasets/
+checkpoints/
+logs/
+
+# Temporary/cache files
+*.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# IDE & editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Large model files (if accidentally added)
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.weights
+
+# Temporary compilation artifacts
+*.o
+*.so
+*.lock
+.tmp/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Distribution artifacts (generated)
+*.egg-info/
+dist/
+build/
+
+# Keep these:
+# ✓ experts/*.khμ (compiled binaries - small)
+# ✓ scripts/ (training scripts)
+# ✓ *.md (documentation)
+# ✓ build_MoE.bat
+# ✓ .github/workflows/ (CI/CD)
