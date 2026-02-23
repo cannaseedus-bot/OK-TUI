@@ -62,39 +62,42 @@ echo.
 REM ============================================================================
 REM Phase 2: Download Datasets
 REM ============================================================================
-echo %BLUE%[2/5] Downloading HuggingFace Datasets...%RESET%
+echo %BLUE%[2/5] Downloading HuggingFace Datasets (40+ experts)...%RESET%
+echo.
 
-set EXPERTS=python security architecture performance sql
-
-for %%E in (%EXPERTS%) do (
-    echo %YELLOW%  • Downloading dataset for %%E expert...%RESET%
-    %PYTHON_CMD% "%SCRIPT_DIR%\download_datasets.py" --expert %%E --output "%DATASETS_DIR%" >> "%LOGS_DIR%\download_%%E.log" 2>&1
-    if errorlevel 1 (
-        echo %RED%[WARNING] Failed to download %%E dataset%RESET%
-        echo Check log: %LOGS_DIR%\download_%%E.log
-    ) else (
-        echo %GREEN%  ✓ %%E dataset ready%RESET%
-    )
+echo %YELLOW%Downloading ALL KHANARY experts...%RESET%
+%PYTHON_CMD% "%SCRIPT_DIR%\download_datasets.py" --expert all --output "%DATASETS_DIR%" >> "%LOGS_DIR%\download_all.log" 2>&1
+if errorlevel 1 (
+    echo %RED%[WARNING] Some dataset downloads failed%RESET%
+    echo Check log: %LOGS_DIR%\download_all.log
+) else (
+    echo %GREEN%  ✓ All datasets ready%RESET%
 )
 echo.
 
 REM ============================================================================
-REM Phase 3: Train Experts
+REM Phase 3: Train Experts (Core Set)
 REM ============================================================================
 echo %BLUE%[3/5] Training Domain-Specific Experts...%RESET%
 echo %YELLOW%  Training configuration:%RESET%
-echo    • Model: Qwen-Coder-7B
-echo    • Datasets: HF curated + Code-Feedback + diversity sets
+echo    • Model: Qwen-7B-Chat
+echo    • Available: 40+ domain-specific experts
+echo    • Core training set: python, javascript, security, frontend, backend
 echo    • Target accuracy: 90-95%%
 echo    • Epochs: 3
 echo    • Batch size: 32
 echo.
+echo %YELLOW%  Note: For all 40+ experts, use:%RESET%
+echo    python scripts/train_expert.py --expert ^<name^> --dataset-dir datasets
+echo.
 
-for %%E in (%EXPERTS%) do (
+REM Train core experts (parallelizable)
+set CORE_EXPERTS=python javascript security react fastapi
+
+for %%E in (%CORE_EXPERTS%) do (
     echo %YELLOW%  • Training %%E expert...%RESET%
     %PYTHON_CMD% "%SCRIPT_DIR%\train_expert.py" ^
         --expert %%E ^
-        --config "%CONFIGS_DIR%\%%E_expert.yaml" ^
         --dataset-dir "%DATASETS_DIR%" ^
         --output "%CHECKPOINTS_DIR%" ^
         --epochs 3 ^
@@ -116,7 +119,7 @@ REM Phase 4: Compile to KHANARY Binary Format
 REM ============================================================================
 echo %BLUE%[4/5] Compiling Experts to KHANARY Format (.khμ)...%RESET%
 
-for %%E in (%EXPERTS%) do (
+for %%E in (%CORE_EXPERTS%) do (
     echo %YELLOW%  • Compiling %%E expert...%RESET%
 
     REM Find the latest checkpoint for this expert
@@ -127,7 +130,8 @@ for %%E in (%EXPERTS%) do (
     %PYTHON_CMD% "%SCRIPT_DIR%\compile_to_khanary.py" ^
         --checkpoint "%CHECKPOINTS_DIR%\!LATEST_CHECKPOINT!" ^
         --output "%EXPERTS_DIR%\%%E.khμ" ^
-        --format khanary_v0.2 ^
+        --expert-name %%E ^
+        --compression fp16 ^
         --log-file "%LOGS_DIR%\compile_%%E.log"
 
     if errorlevel 1 (
@@ -146,7 +150,7 @@ REM ============================================================================
 echo %BLUE%[5/5] Validating Build...%RESET%
 
 echo %YELLOW%  • Checking binary integrity...%RESET%
-for %%E in (%EXPERTS%) do (
+for %%E in (%CORE_EXPERTS%) do (
     if not exist "%EXPERTS_DIR%\%%E.khμ" (
         echo %RED%[ERROR] Missing %%E.khμ binary%RESET%
         exit /b 1
@@ -179,7 +183,7 @@ echo.
 
 echo %YELLOW%  • Generating checksums...%RESET%
 cd /d "%EXPERTS_DIR%"
-for %%E in (%EXPERTS%) do (
+for %%E in (%CORE_EXPERTS%) do (
     for /f %%H in ('powershell -Command "Get-FileHash '%%E.khμ' -Algorithm SHA256 | Select-Object -ExpandProperty Hash"') do (
         echo %%H  %%E.khμ >> SHA256SUMS
     )
