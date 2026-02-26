@@ -2,12 +2,14 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/gdanh/tcell/v2"
-	"github.com/ollama/ollama/cmd/tui/components"
+	"github.com/cannaseedus-bot/Ollama-K/cmd/tui/components"
+	"github.com/cannaseedus-bot/Ollama-K/cmd/tui/session"
 )
 
 // TUIManager is the main TUI coordinator
@@ -23,6 +25,11 @@ type TUIManager struct {
 
 	projectRoot string
 	sessionID   string
+
+	// Session persistence
+	sessionMgr     *session.SessionManager
+	currentSession *session.Session
+	checkpointTicker *time.Ticker
 
 	// Shutdown signal
 	done    chan struct{}
@@ -58,6 +65,19 @@ func NewTUIManager(projectRoot string) (*TUIManager, error) {
 	}
 
 	manager.inputHandler = NewInputHandler(manager)
+
+	// Initialize session manager
+	sessionPath := filepath.Join(os.ExpandEnv("$HOME"), ".kuhul", "sessions")
+	sessionMgr, err := session.NewSessionManager(sessionPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize session manager: %w", err)
+	}
+	manager.sessionMgr = sessionMgr
+
+	// Create new session
+	sessionID := fmt.Sprintf("session_%d", time.Now().Unix())
+	manager.currentSession = manager.sessionMgr.NewSession(sessionID, projectRoot)
+	manager.sessionID = sessionID
 
 	// Create panes
 	manager.panes["editor"] = components.NewEditorPane()
@@ -208,6 +228,10 @@ func (m *TUIManager) Run() error {
 	m.renderer.UpdateSize()
 	m.renderer.Render(m)
 
+	// Start checkpoint ticker (2-second interval)
+	m.checkpointTicker = time.NewTicker(2 * time.Second)
+	defer m.checkpointTicker.Stop()
+
 	// Event loop
 	for m.running {
 		// Handle events with timeout
@@ -216,6 +240,14 @@ func (m *TUIManager) Run() error {
 		select {
 		case <-m.done:
 			return nil
+		case <-m.checkpointTicker.C:
+			// Auto-save session checkpoint
+			if m.currentSession != nil {
+				if err := m.sessionMgr.GetCheckpointManager().SaveCheckpoint(m.currentSession); err != nil {
+					// Log error but continue
+					fmt.Printf("Warning: failed to save checkpoint: %v\n", err)
+				}
+			}
 		case <-m.resizeChan:
 			m.renderer.UpdateSize()
 			m.renderer.Render(m)
@@ -264,6 +296,17 @@ func (m *TUIManager) Run() error {
 func (m *TUIManager) Close() error {
 	m.running = false
 	close(m.done)
+
+	// Save current session before closing
+	if m.currentSession != nil {
+		if err := m.sessionMgr.SaveSession(m.currentSession); err != nil {
+			fmt.Printf("Warning: failed to save session: %v\n", err)
+		}
+		// Save final checkpoint
+		if err := m.sessionMgr.GetCheckpointManager().SaveCheckpoint(m.currentSession); err != nil {
+			fmt.Printf("Warning: failed to save final checkpoint: %v\n", err)
+		}
+	}
 
 	if m.screen != nil {
 		m.screen.Fini()
