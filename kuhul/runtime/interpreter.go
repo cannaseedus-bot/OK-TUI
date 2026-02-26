@@ -3,17 +3,37 @@ package runtime
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ollama/ollama/kuhul/ast"
 	"github.com/ollama/ollama/kuhul/parser"
 )
 
+// FileChange represents a file modification event for TUI tracking
+type FileChange struct {
+	Path      string
+	Type      string    // "created", "modified", "deleted"
+	Timestamp time.Time
+	AgentID   string
+	Tool      string
+	OldSize   int
+	NewSize   int
+	Lines     int
+}
+
+// FileChangeListener is an interface for TUI to receive file change events
+type FileChangeListener interface {
+	OnFileChange(change *FileChange)
+}
+
 // Interpreter executes K'UHUL programs
 type Interpreter struct {
-	state        *RuntimeState
-	program      *ast.Program
-	callDepth    int
-	maxCallDepth int
+	state              *RuntimeState
+	program            *ast.Program
+	callDepth          int
+	maxCallDepth       int
+	FileChangeListener FileChangeListener // Optional TUI listener
+	CurrentAgent       string              // Track which agent is executing
 }
 
 // NewInterpreter creates a new interpreter

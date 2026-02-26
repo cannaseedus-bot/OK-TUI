@@ -9,6 +9,23 @@ import (
 	"time"
 )
 
+// AgentDecision represents an agent autonomy decision for TUI tracking
+type AgentDecision struct {
+	Timestamp  time.Time
+	AgentID    string
+	Action     string // "created_tool", "created_subagent", "modified_file"
+	Target     string
+	Reasoning  string
+	Confidence float64
+}
+
+// TUINotifier is an interface for TUI to receive agent autonomy events
+type TUINotifier interface {
+	OnToolCreated(agent, tool string, decision *AgentDecision)
+	OnSubAgentCreated(parent, child string, decision *AgentDecision)
+	OnAgentDecision(decision *AgentDecision)
+}
+
 // AgentOS represents the complete agent operating system
 type AgentOS struct {
 	// Core components
@@ -29,6 +46,10 @@ type AgentOS struct {
 
 	// Metrics
 	Metrics *OSMetrics
+
+	// TUI Integration (optional)
+	TUINotifier  TUINotifier         // Optional TUI listener
+	AgentDecisions []AgentDecision    // Track recent decisions for TUI
 }
 
 // RunningAgent represents an executing agent instance
