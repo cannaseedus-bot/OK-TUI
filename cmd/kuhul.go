@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ollama/ollama/cmd/tui"
 	"github.com/ollama/ollama/kuhul"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,16 @@ var kuhulCmd = &cobra.Command{
 		tokenize, _ := cmd.Flags().GetBool("tokenize")
 		parseOnly, _ := cmd.Flags().GetBool("parse")
 		jsonOutput, _ := cmd.Flags().GetBool("json")
+		tuiMode, _ := cmd.Flags().GetBool("tui")
+
+		// TUI mode
+		if tuiMode {
+			projectRoot := "."
+			if len(args) > 0 {
+				projectRoot = args[0]
+			}
+			return runKuhulTUI(projectRoot)
+		}
 
 		// REPL mode
 		if replMode {
@@ -53,6 +64,7 @@ func init() {
 	kuhulCmd.Flags().Bool("tokenize", false, "Only tokenize (don't parse or execute)")
 	kuhulCmd.Flags().Bool("parse", false, "Only parse (don't execute)")
 	kuhulCmd.Flags().Bool("json", false, "Output as JSON")
+	kuhulCmd.Flags().Bool("tui", false, "Launch interactive TUI for code generation visualization")
 }
 
 func execKuhulFile(filename string, tokenize, parseOnly, jsonOutput bool) error {
@@ -276,6 +288,26 @@ func outputJSON(v interface{}) error {
 	}
 	fmt.Println(string(bytes))
 	return nil
+}
+
+func runKuhulTUI(projectRoot string) error {
+	// Import here to avoid circular dependencies
+	tuiManager, err := tui.NewTUIManager(projectRoot)
+	if err != nil {
+		return fmt.Errorf("failed to create TUI: %w", err)
+	}
+	defer tuiManager.Close()
+
+	// Load initial file if specified
+	if _, err := os.Stat(projectRoot); err == nil {
+		tuiManager.LoadFile(projectRoot)
+	}
+
+	// Show help on startup
+	tuiManager.ShowHelp()
+
+	// Run TUI event loop
+	return tuiManager.Run()
 }
 
 // GetKuhulCmd returns the kuhul command for registration
